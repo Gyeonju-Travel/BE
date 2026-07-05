@@ -36,7 +36,7 @@ steps:
       
       # 모든 금고 연결 
       - '--set-secrets'
-      - 'DB_HOST=DB_HOST:latest,DB_PORT=DB_PORT:latest,DB_NAME=DB_NAME:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest'
+      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest'
       
 options:
   logging: CLOUD_LOGGING_ONLY
