@@ -33,7 +33,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    implementation 'com.google.cloud.sql:mysql-socket-factory-connector-j-8'
+    implementation 'com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.15.1'
 }
 
 tasks.named('test') {
