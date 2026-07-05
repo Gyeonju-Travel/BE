@@ -8,14 +8,14 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/GyeonjuTravel-repo/GyeonjuTravel-backend:latest'
+      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/gyeonju-repo/GyeonjuTravel-backend:latest'
       - '.'
 
   # 3. Artifact Registry에 이미지 푸시
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/GyeonjuTravel-repo/GyeonjuTravel-backend:latest'
+      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/gyeonju-repo/GyeonjuTravel-backend:latest'
 
   # 4. Cloud Run에 모든 보안 비밀을 결합하여 배포
   - name: 'gcr.io/cloud-builders/gcloud'
@@ -24,7 +24,7 @@ steps:
       - 'deploy'
       - 'GyeonjuTravel-service'
       - '--image'
-      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/GyeonjuTravel-repo/GyeonjuTravel-backend:latest'
+      - 'asia-northeast3-docker.pkg.dev/$PROJECT_ID/gyeonju-repo/GyeonjuTravel-backend:latest'
       - '--region'
       - 'asia-northeast3'
       - '--platform'
@@ -33,7 +33,7 @@ steps:
       
       # 모든 금고 연결 
       - '--set-secrets'
-      - 'DB_HOST=DB_HOST:latest,DB_PORT=DB_PORT:latest,DB_NAME=DB_NAME:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest,FIREBASE_BUCKET_NAME=FIREBASE_BUCKET_NAME:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,GEMINI_BASE_URL=GEMINI_BASE_URL:latest,GEMINI_MODEL=GEMINI_MODEL:latest,/secrets/firebase-key.json=GyeonjuTravel-firebase-json:latest'
+      - 'DB_HOST=DB_HOST:latest,DB_PORT=DB_PORT:latest,DB_NAME=DB_NAME:latest,DB_USERNAME=DB_USERNAME:latest,DB_PASSWORD=DB_PASSWORD:latest'
       
 options:
   logging: CLOUD_LOGGING_ONLY
