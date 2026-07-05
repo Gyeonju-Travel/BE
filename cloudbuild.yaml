@@ -30,9 +30,6 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-
-      # Cloud SQL 인스턴스 연결
-      - '--add-cloudsql-instances=$_SQL_CONNECTION_NAME'
       
       # 모든 금고 연결 
       - '--set-secrets'
