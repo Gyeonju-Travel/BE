@@ -2,6 +2,7 @@ package com.example.gyeonjutravel.global.apiPayload.handler;
 
 import java.util.List;
 
+import com.example.gyeonjutravel.global.apiPayload.exception.BaseErrorCode;
 import com.example.gyeonjutravel.global.apiPayload.response.ErrorCode;
 import com.example.gyeonjutravel.global.apiPayload.response.ErrorResponse;
 import com.example.gyeonjutravel.global.apiPayload.response.FieldErrorResponse;
@@ -21,7 +22,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(GeneralException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(GeneralException generalException) {
-        ErrorCode errorCode = generalException.getErrorCode();
+        BaseErrorCode errorCode = generalException.getErrorCode();
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode, generalException.getMessage()));
