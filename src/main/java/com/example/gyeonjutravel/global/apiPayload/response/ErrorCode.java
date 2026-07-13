@@ -1,8 +1,9 @@
 package com.example.gyeonjutravel.global.apiPayload.response;
 
+import com.example.gyeonjutravel.global.apiPayload.exception.BaseErrorCode;
 import org.springframework.http.HttpStatus;
 
-public enum ErrorCode {
+public enum ErrorCode implements BaseErrorCode {
 
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "COMMON_400", "잘못된 요청입니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON_401", "인증이 필요합니다."),
