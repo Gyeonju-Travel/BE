@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.member.service;
 import com.example.gyeonjutravel.domain.member.dto.request.MemberLoginRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.MemberSignUpRequest;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberAuthResponse;
+import com.example.gyeonjutravel.domain.member.dto.response.MemberSignUpResponse;
 import com.example.gyeonjutravel.domain.member.entity.BlacklistedToken;
 import com.example.gyeonjutravel.domain.member.entity.Member;
 import com.example.gyeonjutravel.domain.member.entity.Role;
@@ -27,7 +28,7 @@ public class MemberService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
-    public MemberAuthResponse signUp(MemberSignUpRequest request) {
+    public MemberSignUpResponse signUp(MemberSignUpRequest request) {
         String email = request.email().toLowerCase();
         if (memberRepository.existsByEmail(email)) {
             throw new GeneralException(MemberErrorCode.DUPLICATE_EMAIL);
@@ -41,7 +42,7 @@ public class MemberService {
                 .role(Role.USER)
                 .build());
 
-        return createAuthResponse(member);
+        return createSignUpResponse(member);
     }
 
     public MemberAuthResponse login(MemberLoginRequest request) {
@@ -69,14 +70,25 @@ public class MemberService {
 
     private MemberAuthResponse createAuthResponse(Member member) {
         String accessToken = jwtTokenProvider.createAccessToken(member);
+        String refreshToken = jwtTokenProvider.createRefreshToken(member);
         return new MemberAuthResponse(
+                member.getId(),
+                accessToken,
+                refreshToken,
+                jwtTokenProvider.getAccessTokenExpiresInSeconds(),
+                jwtTokenProvider.getRefreshTokenExpiresInSeconds()
+        );
+    }
+
+    private MemberSignUpResponse createSignUpResponse(Member member) {
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        return new MemberSignUpResponse(
                 member.getId(),
                 member.getEmail(),
                 member.getNickname(),
                 member.getPhoneNumber(),
-                "Bearer",
                 accessToken,
-                jwtTokenProvider.getExpiresInSeconds()
+                jwtTokenProvider.getAccessTokenExpiresInSeconds()
         );
     }
 
