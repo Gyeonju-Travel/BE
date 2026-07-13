@@ -33,7 +33,7 @@ steps:
       
       # 모든 금고 연결 
       - '--set-secrets'
-      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest'
+      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest'
       
 options:
   logging: CLOUD_LOGGING_ONLY
