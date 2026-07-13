@@ -11,11 +11,6 @@ import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,7 +55,9 @@ public class MemberController {
             description = "현재 access token을 블랙리스트에 등록해 이후 같은 토큰으로 API를 사용할 수 없게 합니다."
     )
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(@RequestHeader("Authorization") String authorizationHeader) {
+    public ApiResponse<Void> logout(
+            @Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader
+    ) {
         memberService.logout(extractToken(authorizationHeader));
         return ApiResponse.ok();
     }
@@ -72,7 +69,7 @@ public class MemberController {
     @DeleteMapping("/withdraw")
     public ApiResponse<Void> withdraw(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestHeader("Authorization") String authorizationHeader
+            @Parameter(hidden = true) @RequestHeader("Authorization") String authorizationHeader
     ) {
         memberService.withdraw(userDetails.member(), extractToken(authorizationHeader));
         return ApiResponse.deleted();
