@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     throw new GeneralException(MemberErrorCode.LOGGED_OUT_TOKEN);
                 }
 
-                if (jwtTokenProvider.isValidToken(token)) {
+                if (jwtTokenProvider.isValidAccessToken(token)) {
                     String email = jwtTokenProvider.getSubject(token);
                     UserDetails userDetails = userDetailsService.loadUserByUsername(email);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

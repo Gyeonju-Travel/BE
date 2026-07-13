@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.member.controller;
 import com.example.gyeonjutravel.domain.member.dto.request.MemberLoginRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.MemberSignUpRequest;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberAuthResponse;
+import com.example.gyeonjutravel.domain.member.dto.response.MemberSignUpResponse;
 import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.service.MemberService;
 import com.example.gyeonjutravel.global.apiPayload.ApiResponse;
@@ -41,7 +42,7 @@ public class MemberController {
             description = "이메일, 비밀번호, 닉네임으로 신규 회원을 생성하고 JWT access token을 발급합니다."
     )
     @PostMapping("/signup")
-    public ApiResponse<MemberAuthResponse> signUp(@Valid @RequestBody MemberSignUpRequest request) {
+    public ApiResponse<MemberSignUpResponse> signUp(@Valid @RequestBody MemberSignUpRequest request) {
         return ApiResponse.created(memberService.signUp(request));
     }
 
