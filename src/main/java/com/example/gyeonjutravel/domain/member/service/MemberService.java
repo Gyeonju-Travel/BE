@@ -15,6 +15,7 @@ import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.repository.BlacklistedTokenRepository;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.member.repository.PasswordResetVerificationRepository;
+import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final BlacklistedTokenRepository blacklistedTokenRepository;
     private final PasswordResetVerificationRepository passwordResetVerificationRepository;
+    private final PetRepository petRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordResetMailService passwordResetMailService;
@@ -165,6 +167,7 @@ public class MemberService {
     @Transactional
     public void withdraw(Member member, String token) {
         blacklistToken(token);
+        petRepository.deleteAllByMemberId(member.getId());
         memberRepository.delete(member);
     }
 
@@ -176,7 +179,8 @@ public class MemberService {
                 accessToken,
                 refreshToken,
                 jwtTokenProvider.getAccessTokenExpiresInSeconds(),
-                jwtTokenProvider.getRefreshTokenExpiresInSeconds()
+                jwtTokenProvider.getRefreshTokenExpiresInSeconds(),
+                petRepository.existsByMemberId(member.getId())
         );
     }
 
@@ -190,7 +194,8 @@ public class MemberService {
                 member.getGender(),
                 member.getPhoneNumber(),
                 accessToken,
-                jwtTokenProvider.getAccessTokenExpiresInSeconds()
+                jwtTokenProvider.getAccessTokenExpiresInSeconds(),
+                false
         );
     }
 

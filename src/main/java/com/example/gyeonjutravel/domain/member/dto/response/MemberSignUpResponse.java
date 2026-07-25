@@ -12,6 +12,7 @@ public record MemberSignUpResponse(
         Gender gender,
         String phoneNumber,
         String accessToken,
-        Long accessTokenExpiresIn
+        Long accessTokenExpiresIn,
+        boolean onboardingCompleted
 ) {
 }
