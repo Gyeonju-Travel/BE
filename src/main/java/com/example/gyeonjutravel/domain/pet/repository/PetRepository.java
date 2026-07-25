@@ -8,11 +8,13 @@ import java.util.Optional;
 
 public interface PetRepository extends JpaRepository<Pet, Long> {
 
-    List<Pet> findAllByMemberIdOrderByIdAsc(Long memberId);
+    List<Pet> findAllByMemberIdAndRepresentativeFalseOrderByIdAsc(Long memberId);
+
+    Optional<Pet> findFirstByMemberIdAndRepresentativeTrue(Long memberId);
 
     Optional<Pet> findByIdAndMemberId(Long petId, Long memberId);
 
-    boolean existsByMemberId(Long memberId);
+    boolean existsByMemberIdAndRepresentativeTrue(Long memberId);
 
     void deleteAllByMemberId(Long memberId);
 }

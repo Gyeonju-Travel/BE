@@ -5,7 +5,7 @@ import com.example.gyeonjutravel.domain.pet.entity.enums.DogSize;
 import com.example.gyeonjutravel.domain.pet.entity.enums.TravelPreference;
 import com.example.gyeonjutravel.domain.pet.entity.enums.WalkingStyle;
 
-public record PetCreateResponse(
+public record PetOnboardingResponse(
         Long petId,
         String name,
         String profileImageUrl,
@@ -14,8 +14,8 @@ public record PetCreateResponse(
         WalkingStyle walkingStyle
 ) {
 
-    public static PetCreateResponse from(Pet pet) {
-        return new PetCreateResponse(
+    public static PetOnboardingResponse from(Pet pet) {
+        return new PetOnboardingResponse(
                 pet.getId(),
                 pet.getName(),
                 pet.getProfileImageUrl(),

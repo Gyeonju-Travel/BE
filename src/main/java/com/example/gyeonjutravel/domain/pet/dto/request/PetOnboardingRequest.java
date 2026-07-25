@@ -7,13 +7,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record PetCreateRequest(
+public record PetOnboardingRequest(
         @NotBlank(message = "강아지 이름은 필수입니다.")
         @Size(max = 30, message = "강아지 이름은 30자 이하여야 합니다.")
         String name,
-
-        @Size(max = 2048, message = "프로필 이미지 URL은 2048자 이하여야 합니다.")
-        String profileImageUrl,
 
         @NotNull(message = "강아지 크기는 필수입니다.")
         DogSize size,

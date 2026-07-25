@@ -180,7 +180,7 @@ public class MemberService {
                 refreshToken,
                 jwtTokenProvider.getAccessTokenExpiresInSeconds(),
                 jwtTokenProvider.getRefreshTokenExpiresInSeconds(),
-                petRepository.existsByMemberId(member.getId())
+                petRepository.existsByMemberIdAndRepresentativeTrue(member.getId())
         );
     }
 

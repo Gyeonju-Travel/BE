@@ -53,12 +53,15 @@ public class Pet extends BaseEntity {
     @Column(length = 20)
     private PetPersonality personality;
 
+    @Column(nullable = false)
+    private boolean representative;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
+    @Column(length = 30)
     private TravelPreference travelPreference;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private WalkingStyle walkingStyle;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -70,14 +73,24 @@ public class Pet extends BaseEntity {
             Member member,
             String name,
             String profileImageUrl,
+            String breed,
             DogSize size,
+            Integer age,
+            PetGender gender,
+            PetPersonality personality,
+            boolean representative,
             TravelPreference travelPreference,
             WalkingStyle walkingStyle
     ) {
         this.member = member;
         this.name = name;
         this.profileImageUrl = profileImageUrl;
+        this.breed = breed;
         this.size = size;
+        this.age = age;
+        this.gender = gender;
+        this.personality = personality;
+        this.representative = representative;
         this.travelPreference = travelPreference;
         this.walkingStyle = walkingStyle;
     }
