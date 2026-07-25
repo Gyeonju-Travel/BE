@@ -9,7 +9,9 @@ import com.example.gyeonjutravel.global.apiPayload.response.FieldErrorResponse;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -49,6 +51,19 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, errors));
     }
 
+    @ExceptionHandler(BindException.class)
+    protected ResponseEntity<ErrorResponse> handleBindException(BindException exception) {
+        List<FieldErrorResponse> errors = exception.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(this::toFieldErrorResponse)
+                .toList();
+
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT_VALUE.getStatus())
+                .body(ErrorResponse.of(ErrorCode.INVALID_INPUT_VALUE, errors));
+    }
+
     @ExceptionHandler({
             MissingServletRequestParameterException.class,
             MethodArgumentTypeMismatchException.class
@@ -64,6 +79,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.METHOD_NOT_ALLOWED.getStatus())
                 .body(ErrorResponse.of(ErrorCode.METHOD_NOT_ALLOWED));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    protected ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException() {
+        return ResponseEntity
+                .status(ErrorCode.UNSUPPORTED_MEDIA_TYPE.getStatus())
+                .body(ErrorResponse.of(ErrorCode.UNSUPPORTED_MEDIA_TYPE));
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
