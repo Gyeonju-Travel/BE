@@ -7,6 +7,7 @@ import com.example.gyeonjutravel.global.apiPayload.response.ErrorCode;
 import com.example.gyeonjutravel.global.apiPayload.response.ErrorResponse;
 import com.example.gyeonjutravel.global.apiPayload.response.FieldErrorResponse;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -18,11 +19,16 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(GeneralException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(GeneralException generalException) {
         BaseErrorCode errorCode = generalException.getErrorCode();
+        if (errorCode.getStatus().is5xxServerError()) {
+            log.error("Business exception: code={}, message={}",
+                    errorCode.getCode(), generalException.getMessage(), generalException);
+        }
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.of(errorCode, generalException.getMessage()));
@@ -68,7 +74,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(java.lang.Exception.class)
-    protected ResponseEntity<ErrorResponse> handleException() {
+    protected ResponseEntity<ErrorResponse> handleException(java.lang.Exception exception) {
+        log.error("Unhandled exception", exception);
         return ResponseEntity
                 .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
                 .body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));

@@ -1,7 +1,7 @@
 package com.example.gyeonjutravel.domain.place.config;
 
+import com.example.gyeonjutravel.domain.member.entity.Gender;
 import com.example.gyeonjutravel.domain.member.entity.Member;
-import com.example.gyeonjutravel.domain.member.entity.Role;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
@@ -15,6 +15,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -61,9 +63,10 @@ class PlaceDataInitializerIntegrationTest {
         Member member = memberRepository.save(Member.builder()
                 .email("bookmark@example.com")
                 .password("encoded-password")
-                .nickname("북마크테스터")
+                .name("북마크테스터")
+                .birthDate(LocalDate.of(1995, 1, 1))
+                .gender(Gender.FEMALE)
                 .phoneNumber("010-1234-5678")
-                .role(Role.USER)
                 .build());
         var places = placeRepository.findAll();
         Long firstPlaceId = places.stream()

@@ -1,11 +1,16 @@
 package com.example.gyeonjutravel.domain.member.dto.response;
 
+import com.example.gyeonjutravel.domain.member.entity.Gender;
 import com.example.gyeonjutravel.domain.member.entity.Member;
+
+import java.time.LocalDate;
 
 public record MemberResponse(
         Long memberId,
         String email,
-        String nickname,
+        String name,
+        LocalDate birthDate,
+        Gender gender,
         String phoneNumber
 ) {
 
@@ -13,7 +18,9 @@ public record MemberResponse(
         return new MemberResponse(
                 member.getId(),
                 member.getEmail(),
-                member.getNickname(),
+                member.getName(),
+                member.getBirthDate(),
+                member.getGender(),
                 member.getPhoneNumber()
         );
     }

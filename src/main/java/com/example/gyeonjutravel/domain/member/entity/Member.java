@@ -39,22 +39,18 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String password;
 
-    @Column(nullable = false, length = 30)
+    @Column(name = "nickname", nullable = false, length = 30)
     private String name;
 
-    @Column(nullable = false)
+    @Column
     private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 10)
+    @Column(length = 10)
     private Gender gender;
 
     @Column(nullable = false, length = 20)
     private String phoneNumber;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private Role role;
 
     @ManyToMany
     @JoinTable(
@@ -75,8 +71,7 @@ public class Member extends BaseEntity {
             String name,
             LocalDate birthDate,
             Gender gender,
-            String phoneNumber,
-            Role role
+            String phoneNumber
     ) {
         this.email = email;
         this.password = password;
@@ -84,7 +79,6 @@ public class Member extends BaseEntity {
         this.birthDate = birthDate;
         this.gender = gender;
         this.phoneNumber = phoneNumber;
-        this.role = role;
     }
 
     public void changePassword(String encodedPassword) {
