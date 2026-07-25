@@ -7,6 +7,9 @@ import com.example.gyeonjutravel.global.apiPayload.ApiResponse;
 import com.example.gyeonjutravel.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -34,7 +36,11 @@ public class OnboardingController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<PetOnboardingResponse> complete(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @ModelAttribute PetOnboardingRequest request,
+            @RequestBody(content = @Content(encoding = @Encoding(
+                    name = "request",
+                    contentType = MediaType.APPLICATION_JSON_VALUE
+            )))
+            @Valid @RequestPart("request") PetOnboardingRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.created(petService.completeOnboarding(userDetails.member().getId(), request, image));

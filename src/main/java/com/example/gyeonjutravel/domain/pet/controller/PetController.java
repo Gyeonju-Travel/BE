@@ -9,6 +9,9 @@ import com.example.gyeonjutravel.global.apiPayload.ApiResponse;
 import com.example.gyeonjutravel.global.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,13 +41,17 @@ public class PetController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<PetDetailResponse> register(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @ModelAttribute PetRegistrationRequest request,
+            @RequestBody(content = @Content(encoding = @Encoding(
+                    name = "request",
+                    contentType = MediaType.APPLICATION_JSON_VALUE
+            )))
+            @Valid @RequestPart("request") PetRegistrationRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.created(petService.register(userDetails.member().getId(), request, image));
     }
 
-    @Operation(summary = "내 반려견 목록 조회")
+    @Operation(summary = "내 반려견 목록 조회", description = " 대표 반려견 및 그 외 등록된 반려견을 반환합니다.")
     @GetMapping
     public ApiResponse<PetListResponse> getMyPets(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
@@ -53,7 +59,7 @@ public class PetController {
         return ApiResponse.ok(petService.getMyPets(userDetails.member().getId()));
     }
 
-    @Operation(summary = "반려견 상세 조회")
+    @Operation(summary = "반려견 상세 조회", description = "반려견의 상세 정보를 조회합니다.")
     @GetMapping("/{petId}")
     public ApiResponse<PetDetailResponse> get(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -62,12 +68,16 @@ public class PetController {
         return ApiResponse.ok(petService.get(userDetails.member().getId(), petId));
     }
 
-    @Operation(summary = "반려견 프로필 수정")
+    @Operation(summary = "반려견 프로필 수정", description = "반려견의 정보를 수정합니다.")
     @PatchMapping(value = "/{petId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PetDetailResponse> updateProfile(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long petId,
-            @Valid @ModelAttribute PetProfileUpdateRequest request,
+            @RequestBody(content = @Content(encoding = @Encoding(
+                    name = "request",
+                    contentType = MediaType.APPLICATION_JSON_VALUE
+            )))
+            @Valid @RequestPart("request") PetProfileUpdateRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.ok(petService.updateProfile(userDetails.member().getId(), petId, request, image));
