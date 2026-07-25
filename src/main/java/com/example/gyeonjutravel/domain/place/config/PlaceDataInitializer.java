@@ -43,12 +43,11 @@ public class PlaceDataInitializer implements ApplicationRunner {
     private record PlaceSeedDocument(List<PlaceSeed> places, List<SkippedPlace> skipped) {
     }
 
-    private record SkippedPlace(String externalId, String name, String reason) {
+    private record SkippedPlace(String name, String reason) {
     }
 
     private record PlaceSeed(
             String sourceKey,
-            String externalId,
             PlaceCategory category,
             String originalCategory,
             String name,
@@ -77,7 +76,6 @@ public class PlaceDataInitializer implements ApplicationRunner {
         private Place toEntity() {
             return Place.builder()
                     .sourceKey(sourceKey)
-                    .externalId(externalId)
                     .category(category)
                     .originalCategory(originalCategory)
                     .name(name)

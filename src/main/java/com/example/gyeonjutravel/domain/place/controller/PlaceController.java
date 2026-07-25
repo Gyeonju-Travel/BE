@@ -1,6 +1,6 @@
 package com.example.gyeonjutravel.domain.place.controller;
 
-import com.example.gyeonjutravel.domain.place.dto.request.DeleteBookmarkRequest;
+import com.example.gyeonjutravel.domain.place.dto.request.DeleteBookmarksRequest;
 import com.example.gyeonjutravel.domain.place.dto.response.MapPlacePageResponse;
 import com.example.gyeonjutravel.domain.place.dto.response.MapPlaceResponse;
 import com.example.gyeonjutravel.domain.place.dto.response.PlaceDetailResponse;
@@ -65,18 +65,19 @@ public class PlaceController {
     @Operation(summary = "저장한 장소 조회")
     @GetMapping("/bookmarks")
     public ApiResponse<List<MapPlaceResponse>> getBookmarks(
+            @RequestParam(required = false) List<PlaceCategory> categories,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        return ApiResponse.ok(placeService.getBookmarks(userDetails.member()));
+        return ApiResponse.ok(placeService.getBookmarks(userDetails.member(), categories));
     }
 
     @Operation(summary = "저장한 장소 삭제")
     @DeleteMapping("/bookmarks")
-    public ApiResponse<Void> deleteBookmark(
-            @Valid @RequestBody DeleteBookmarkRequest request,
+    public ApiResponse<Void> deleteBookmarks(
+            @Valid @RequestBody DeleteBookmarksRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        placeService.deleteBookmark(userDetails.member(), request.placeId());
+        placeService.deleteBookmarks(userDetails.member(), request.placeIds());
         return ApiResponse.deleted();
     }
 }

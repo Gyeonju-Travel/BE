@@ -32,9 +32,6 @@ public class Place extends BaseEntity {
     @Column(name = "source_key", nullable = false, length = 80)
     private String sourceKey;
 
-    @Column(length = 50)
-    private String externalId;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private PlaceCategory category;
@@ -111,7 +108,6 @@ public class Place extends BaseEntity {
     @Builder
     private Place(
             String sourceKey,
-            String externalId,
             PlaceCategory category,
             String originalCategory,
             String name,
@@ -138,7 +134,6 @@ public class Place extends BaseEntity {
             String petSafetyInfo
     ) {
         this.sourceKey = sourceKey;
-        this.externalId = externalId;
         this.category = category;
         this.originalCategory = originalCategory;
         this.name = name;

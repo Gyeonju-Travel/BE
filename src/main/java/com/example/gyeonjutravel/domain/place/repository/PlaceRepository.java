@@ -16,4 +16,11 @@ public interface PlaceRepository extends JpaRepository<Place, Long>, JpaSpecific
     @Query("select place from Member member join member.bookmarkedPlaces place "
             + "where member.id = :memberId order by place.id desc")
     List<Place> findBookmarkedPlacesByMemberId(@Param("memberId") Long memberId);
+
+    @Query("select place from Member member join member.bookmarkedPlaces place "
+            + "where member.id = :memberId and place.category in :categories order by place.id desc")
+    List<Place> findBookmarkedPlacesByMemberIdAndCategories(
+            @Param("memberId") Long memberId,
+            @Param("categories") List<PlaceCategory> categories
+    );
 }

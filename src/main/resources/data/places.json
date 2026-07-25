@@ -2,7 +2,6 @@
   "places": [
     {
       "sourceKey": "PLACE:1",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "987피자",
@@ -30,7 +29,6 @@
     },
     {
       "sourceKey": "PLACE:2",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "료미",
@@ -58,7 +56,6 @@
     },
     {
       "sourceKey": "PLACE:3",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "백년손님",
@@ -86,7 +83,6 @@
     },
     {
       "sourceKey": "PLACE:4",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "백조식당",
@@ -114,7 +110,6 @@
     },
     {
       "sourceKey": "PLACE:5",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "줄리스",
@@ -142,7 +137,6 @@
     },
     {
       "sourceKey": "PLACE:6",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "포롱아밀 황남점",
@@ -170,7 +164,6 @@
     },
     {
       "sourceKey": "PLACE:7",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "화양연화",
@@ -198,7 +191,6 @@
     },
     {
       "sourceKey": "PLACE:8",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "료코",
@@ -226,7 +218,6 @@
     },
     {
       "sourceKey": "PLACE:9",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황남두꺼비식당 황남본점",
@@ -254,7 +245,6 @@
     },
     {
       "sourceKey": "PLACE:10",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "피자옥",
@@ -282,7 +272,6 @@
     },
     {
       "sourceKey": "PLACE:11",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "범외양간 황리단길본점",
@@ -310,7 +299,6 @@
     },
     {
       "sourceKey": "PLACE:12",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "경주황소곱창 황리단길본점",
@@ -338,7 +326,6 @@
     },
     {
       "sourceKey": "PLACE:13",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "메종드문",
@@ -366,7 +353,6 @@
     },
     {
       "sourceKey": "PLACE:14",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "풍미갈비찜",
@@ -394,7 +380,6 @@
     },
     {
       "sourceKey": "PLACE:15",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황남갈비",
@@ -422,7 +407,6 @@
     },
     {
       "sourceKey": "PLACE:16",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "타베르나",
@@ -450,7 +434,6 @@
     },
     {
       "sourceKey": "PLACE:17",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "소나무 황리단길본점",
@@ -478,7 +461,6 @@
     },
     {
       "sourceKey": "PLACE:18",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "오칼국수",
@@ -506,7 +488,6 @@
     },
     {
       "sourceKey": "PLACE:19",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황남거북이",
@@ -534,7 +515,6 @@
     },
     {
       "sourceKey": "PLACE:20",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "그때그소간지",
@@ -562,7 +542,6 @@
     },
     {
       "sourceKey": "PLACE:21",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "짚불함박",
@@ -590,7 +569,6 @@
     },
     {
       "sourceKey": "PLACE:22",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "향밀",
@@ -618,7 +596,6 @@
     },
     {
       "sourceKey": "PLACE:23",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "체크인치즈 황리단길점",
@@ -646,7 +623,6 @@
     },
     {
       "sourceKey": "PLACE:24",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황남역",
@@ -674,7 +650,6 @@
     },
     {
       "sourceKey": "PLACE:25",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황남양옥",
@@ -702,7 +677,6 @@
     },
     {
       "sourceKey": "PLACE:26",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "대릉소반",
@@ -730,7 +704,6 @@
     },
     {
       "sourceKey": "PLACE:27",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "미포기사식당",
@@ -758,7 +731,6 @@
     },
     {
       "sourceKey": "PLACE:28",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "후프후프",
@@ -786,7 +758,6 @@
     },
     {
       "sourceKey": "PLACE:29",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황리화덕가",
@@ -814,7 +785,6 @@
     },
     {
       "sourceKey": "PLACE:30",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "향택 경주",
@@ -842,7 +812,6 @@
     },
     {
       "sourceKey": "PLACE:31",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "무궁무진",
@@ -870,7 +839,6 @@
     },
     {
       "sourceKey": "PLACE:32",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "노키",
@@ -898,7 +866,6 @@
     },
     {
       "sourceKey": "PLACE:33",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "마카다",
@@ -926,7 +893,6 @@
     },
     {
       "sourceKey": "PLACE:34",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황리단 치킨",
@@ -954,7 +920,6 @@
     },
     {
       "sourceKey": "PLACE:35",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "담요 따뜻한 손길",
@@ -982,7 +947,6 @@
     },
     {
       "sourceKey": "PLACE:36",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "스컹크웍스",
@@ -1010,7 +974,6 @@
     },
     {
       "sourceKey": "PLACE:37",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "굿즈",
@@ -1038,7 +1001,6 @@
     },
     {
       "sourceKey": "PLACE:38",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "비밀공간",
@@ -1066,7 +1028,6 @@
     },
     {
       "sourceKey": "PLACE:39",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "샬로우커피 황리단길점",
@@ -1094,7 +1055,6 @@
     },
     {
       "sourceKey": "PLACE:40",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "데어벤치",
@@ -1122,7 +1082,6 @@
     },
     {
       "sourceKey": "PLACE:41",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "스위피",
@@ -1150,7 +1109,6 @@
     },
     {
       "sourceKey": "PLACE:42",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "아르떼",
@@ -1178,7 +1136,6 @@
     },
     {
       "sourceKey": "PLACE:43",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "키도트",
@@ -1206,7 +1163,6 @@
     },
     {
       "sourceKey": "PLACE:44",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "후프후프",
@@ -1234,7 +1190,6 @@
     },
     {
       "sourceKey": "PLACE:45",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "올리브",
@@ -1262,7 +1217,6 @@
     },
     {
       "sourceKey": "PLACE:46",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "양지다방",
@@ -1290,7 +1244,6 @@
     },
     {
       "sourceKey": "PLACE:47",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "미실카페",
@@ -1318,7 +1271,6 @@
     },
     {
       "sourceKey": "PLACE:48",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "햇오프커피",
@@ -1346,7 +1298,6 @@
     },
     {
       "sourceKey": "PLACE:49",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "비화커피",
@@ -1374,7 +1325,6 @@
     },
     {
       "sourceKey": "PLACE:50",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "오버랩",
@@ -1402,7 +1352,6 @@
     },
     {
       "sourceKey": "PLACE:51",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "주돈",
@@ -1430,7 +1379,6 @@
     },
     {
       "sourceKey": "PLACE:52",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "서울뒷고기막창",
@@ -1458,7 +1406,6 @@
     },
     {
       "sourceKey": "PLACE:53",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "옐라",
@@ -1486,7 +1433,6 @@
     },
     {
       "sourceKey": "PLACE:54",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "대호당",
@@ -1514,7 +1460,6 @@
     },
     {
       "sourceKey": "PLACE:55",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "사계돈",
@@ -1542,7 +1487,6 @@
     },
     {
       "sourceKey": "PLACE:56",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황오바오",
@@ -1570,7 +1514,6 @@
     },
     {
       "sourceKey": "PLACE:57",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "시간의 여백",
@@ -1598,7 +1541,6 @@
     },
     {
       "sourceKey": "PLACE:58",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "리커피하우스",
@@ -1626,7 +1568,6 @@
     },
     {
       "sourceKey": "PLACE:59",
-      "externalId": null,
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "진수성찬",
@@ -1654,7 +1595,6 @@
     },
     {
       "sourceKey": "PLACE:60",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "베이글베이글러",
@@ -1682,7 +1622,6 @@
     },
     {
       "sourceKey": "PLACE:61",
-      "externalId": null,
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "제이커피 경주첨성대점",
@@ -1710,7 +1649,6 @@
     },
     {
       "sourceKey": "PLACE:62",
-      "externalId": "2756689",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 핑크뮬리(경주 핑크뮬리 군락지)",
@@ -1738,7 +1676,6 @@
     },
     {
       "sourceKey": "PLACE:63",
-      "externalId": "2756619",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "파도소리길",
@@ -1766,7 +1703,6 @@
     },
     {
       "sourceKey": "PLACE:64",
-      "externalId": "128676",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 교촌마을",
@@ -1794,7 +1730,6 @@
     },
     {
       "sourceKey": "PLACE:65",
-      "externalId": "3029628",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "빛누리정원",
@@ -1822,7 +1757,6 @@
     },
     {
       "sourceKey": "PLACE:66",
-      "externalId": "126166",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 불국사 [유네스코 세계유산]",
@@ -1850,7 +1784,6 @@
     },
     {
       "sourceKey": "PLACE:67",
-      "externalId": "126230",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 보문관광단지",
@@ -1878,7 +1811,6 @@
     },
     {
       "sourceKey": "PLACE:68",
-      "externalId": "2658227",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 황리단길",
@@ -1906,7 +1838,6 @@
     },
     {
       "sourceKey": "PLACE:69",
-      "externalId": "3101682",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "화랑의 언덕",
@@ -1934,7 +1865,6 @@
     },
     {
       "sourceKey": "PLACE:70",
-      "externalId": "128679",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "나정고운모래해변",
@@ -1962,7 +1892,6 @@
     },
     {
       "sourceKey": "PLACE:71",
-      "externalId": "126134",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "보문호",
@@ -1990,7 +1919,6 @@
     },
     {
       "sourceKey": "PLACE:72",
-      "externalId": "128116",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 계림",
@@ -2018,7 +1946,6 @@
     },
     {
       "sourceKey": "PLACE:73",
-      "externalId": "2603509",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "월정교",
@@ -2046,7 +1973,6 @@
     },
     {
       "sourceKey": "PLACE:74",
-      "externalId": "128677",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "감포항",
@@ -2074,7 +2000,6 @@
     },
     {
       "sourceKey": "PLACE:75",
-      "externalId": "2941029",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "국민힐링파크",
@@ -2102,7 +2027,6 @@
     },
     {
       "sourceKey": "PLACE:76",
-      "externalId": "2789998",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "화랑의언덕",
@@ -2130,7 +2054,6 @@
     },
     {
       "sourceKey": "PLACE:77",
-      "externalId": "128612",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 서출지",
@@ -2158,7 +2081,6 @@
     },
     {
       "sourceKey": "PLACE:78",
-      "externalId": "127487",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주엑스포대공원",
@@ -2186,7 +2108,6 @@
     },
     {
       "sourceKey": "PLACE:79",
-      "externalId": "2015553",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "보문정(경주)",
@@ -2214,7 +2135,6 @@
     },
     {
       "sourceKey": "PLACE:80",
-      "externalId": "2778053",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "신라왕경숲",
@@ -2242,7 +2162,6 @@
     },
     {
       "sourceKey": "PLACE:81",
-      "externalId": "2756611",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주읍성",
@@ -2270,7 +2189,6 @@
     },
     {
       "sourceKey": "PLACE:82",
-      "externalId": "126207",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 첨성대",
@@ -2298,7 +2216,6 @@
     },
     {
       "sourceKey": "PLACE:83",
-      "externalId": "126218",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 문무대왕릉",
@@ -2326,7 +2243,6 @@
     },
     {
       "sourceKey": "PLACE:84",
-      "externalId": "2756910",
       "category": "ATTRACTION",
       "originalCategory": "문화시설",
       "name": "추억의 달동네",
@@ -2354,7 +2270,6 @@
     },
     {
       "sourceKey": "PLACE:85",
-      "externalId": "2738810",
       "category": "ATTRACTION",
       "originalCategory": "레포츠",
       "name": "오아시스글램핑",
@@ -2382,7 +2297,6 @@
     },
     {
       "sourceKey": "PLACE:86",
-      "externalId": "3401777",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "더케이호텔경주",
@@ -2410,7 +2324,6 @@
     },
     {
       "sourceKey": "PLACE:87",
-      "externalId": "3533166",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "아담게스트하우스",
@@ -2438,7 +2351,6 @@
     },
     {
       "sourceKey": "PLACE:88",
-      "externalId": "2701396",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "서남산한옥",
@@ -2466,7 +2378,6 @@
     },
     {
       "sourceKey": "PLACE:89",
-      "externalId": "2628004",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "에스지빌라앤호텔(미동의)",
@@ -2494,7 +2405,6 @@
     },
     {
       "sourceKey": "PLACE:90",
-      "externalId": "3102067",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "온새미한옥",
@@ -2522,7 +2432,6 @@
     },
     {
       "sourceKey": "PLACE:91",
-      "externalId": "3112142",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "위클라드 애견 풀빌라",
@@ -2550,7 +2459,6 @@
     },
     {
       "sourceKey": "PLACE:92",
-      "externalId": "3102074",
       "category": "ATTRACTION",
       "originalCategory": "숙박",
       "name": "알천스테이 한옥커플가족독채펜션",
@@ -2578,7 +2486,6 @@
     },
     {
       "sourceKey": "PLACE:93",
-      "externalId": "4054306",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "제로스페이스 경주[면세점(TAX REFUND SHOP)]",
@@ -2606,7 +2513,6 @@
     },
     {
       "sourceKey": "PLACE:94",
-      "externalId": "4012184",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "삼성스토어 경주",
@@ -2634,7 +2540,6 @@
     },
     {
       "sourceKey": "PLACE:95",
-      "externalId": "4026417",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "라이프워크 경주직영점",
@@ -2662,7 +2567,6 @@
     },
     {
       "sourceKey": "PLACE:96",
-      "externalId": "4026418",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "롯데하이마트 경주점",
@@ -2690,7 +2594,6 @@
     },
     {
       "sourceKey": "PLACE:97",
-      "externalId": "4026419",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "LG전자 베스트샵 경주점",
@@ -2718,7 +2621,6 @@
     },
     {
       "sourceKey": "PLACE:98",
-      "externalId": "4026420",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "ABC마트 ST 경주노동점",
@@ -2746,7 +2648,6 @@
     },
     {
       "sourceKey": "PLACE:99",
-      "externalId": "4026421",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "한양민예사",
@@ -2774,7 +2675,6 @@
     },
     {
       "sourceKey": "PLACE:100",
-      "externalId": "4026422",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "ABC마트 ST 경주천북점",
@@ -2802,7 +2702,6 @@
     },
     {
       "sourceKey": "PLACE:101",
-      "externalId": "2927121",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "세컨페이스 경주중앙점",
@@ -2830,7 +2729,6 @@
     },
     {
       "sourceKey": "PLACE:102",
-      "externalId": "3555814",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "코오롱스포츠 경주중앙로점",
@@ -2858,7 +2756,6 @@
     },
     {
       "sourceKey": "PLACE:103",
-      "externalId": "3555818",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "이니스프리 경주점",
@@ -2886,7 +2783,6 @@
     },
     {
       "sourceKey": "PLACE:104",
-      "externalId": "3555925",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "올리브영 경주용강점",
@@ -2914,7 +2810,6 @@
     },
     {
       "sourceKey": "PLACE:105",
-      "externalId": "3555942",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "올리브영 경주황남점",
@@ -2942,7 +2837,6 @@
     },
     {
       "sourceKey": "PLACE:106",
-      "externalId": "3555821",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "폴더 경주점",
@@ -2970,7 +2864,6 @@
     },
     {
       "sourceKey": "PLACE:107",
-      "externalId": "2929554",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "모다아울렛 경주포항점",
@@ -2998,7 +2891,6 @@
     },
     {
       "sourceKey": "PLACE:108",
-      "externalId": "2926913",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "아트박스 경주점",
@@ -3026,7 +2918,6 @@
     },
     {
       "sourceKey": "PLACE:109",
-      "externalId": "4012183",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "유니클로 경주점",
@@ -3054,7 +2945,6 @@
     },
     {
       "sourceKey": "PLACE:110",
-      "externalId": "4012202",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "다비치안경 경주중앙로점",
@@ -3082,7 +2972,6 @@
     },
     {
       "sourceKey": "PLACE:111",
-      "externalId": "2988973",
       "category": "ATTRACTION",
       "originalCategory": "쇼핑",
       "name": "제로스페이스 경주",
@@ -3110,7 +2999,6 @@
     },
     {
       "sourceKey": "PLACE:112",
-      "externalId": "3456352",
       "category": "RESTAURANT",
       "originalCategory": "음식점",
       "name": "르씨엘",
@@ -3138,7 +3026,6 @@
     },
     {
       "sourceKey": "PLACE:113",
-      "externalId": "3444369",
       "category": "RESTAURANT",
       "originalCategory": "음식점",
       "name": "파라안 안강",
@@ -3167,7 +3054,6 @@
   ],
   "skipped": [
     {
-      "externalId": "127619",
       "name": "황성공원",
       "reason": "MISSING_OR_INVALID_COORDINATES"
     }

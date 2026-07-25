@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -39,7 +40,14 @@ public class Member extends BaseEntity {
     private String password;
 
     @Column(nullable = false, length = 30)
-    private String nickname;
+    private String name;
+
+    @Column(nullable = false)
+    private LocalDate birthDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Gender gender;
 
     @Column(nullable = false, length = 20)
     private String phoneNumber;
@@ -61,19 +69,39 @@ public class Member extends BaseEntity {
     private Set<Place> bookmarkedPlaces = new LinkedHashSet<>();
 
     @Builder
-    private Member(String email, String password, String nickname, String phoneNumber, Role role) {
+    private Member(
+            String email,
+            String password,
+            String name,
+            LocalDate birthDate,
+            Gender gender,
+            String phoneNumber,
+            Role role
+    ) {
         this.email = email;
         this.password = password;
-        this.nickname = nickname;
+        this.name = name;
+        this.birthDate = birthDate;
+        this.gender = gender;
         this.phoneNumber = phoneNumber;
         this.role = role;
+    }
+
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 
     public boolean addBookmark(Place place) {
         return bookmarkedPlaces.add(place);
     }
 
-    public boolean removeBookmark(Long placeId) {
-        return bookmarkedPlaces.removeIf(place -> place.getId().equals(placeId));
+    public boolean removeBookmarks(Set<Long> placeIds) {
+        Set<Long> bookmarkedPlaceIds = bookmarkedPlaces.stream()
+                .map(Place::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        if (!bookmarkedPlaceIds.containsAll(placeIds)) {
+            return false;
+        }
+        return bookmarkedPlaces.removeIf(place -> placeIds.contains(place.getId()));
     }
 }

@@ -8,7 +8,6 @@ public record PlaceDetailResponse(
         String name,
         PlaceCategory category,
         String categoryLabel,
-        String originalCategory,
         String detailCategory,
         String area,
         String administrativeDistrict,
@@ -19,7 +18,6 @@ public record PlaceDetailResponse(
         String businessHours,
         String breakTime,
         String closedDays,
-        String hoursNote,
         Double longitude,
         Double latitude,
         String imageUrl,
@@ -29,19 +27,17 @@ public record PlaceDetailResponse(
         String petInfo,
         String petFacilities,
         String petProvidedItems,
-        String petSafetyInfo,
-        String externalId
+        String petSafetyInfo
 ) {
     public static PlaceDetailResponse from(Place place) {
         return new PlaceDetailResponse(
                 place.getId(), place.getName(), place.getCategory(), place.getCategory().getLabel(),
-                place.getOriginalCategory(), place.getDetailCategory(), place.getArea(),
-                place.getAdministrativeDistrict(), place.getRoadAddress(), place.getLotAddress(),
-                place.getPostalCode(), place.getPhone(), place.getBusinessHours(), place.getBreakTime(),
-                place.getClosedDays(), place.getHoursNote(), place.getLongitude(), place.getLatitude(),
-                place.getImageUrl(), place.getPetAccessType(), place.getAllowedPets(),
+                place.getDetailCategory(), place.getArea(), place.getAdministrativeDistrict(),
+                place.getRoadAddress(), place.getLotAddress(), place.getPostalCode(), place.getPhone(),
+                place.getBusinessHours(), place.getBreakTime(), place.getClosedDays(), place.getLongitude(),
+                place.getLatitude(), place.getImageUrl(), place.getPetAccessType(), place.getAllowedPets(),
                 place.getPetRequirements(), place.getPetInfo(), place.getPetFacilities(),
-                place.getPetProvidedItems(), place.getPetSafetyInfo(), place.getExternalId()
+                place.getPetProvidedItems(), place.getPetSafetyInfo()
         );
     }
 }

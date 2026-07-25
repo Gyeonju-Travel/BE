@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -64,20 +65,29 @@ public class PlaceService {
         return MapPlaceResponse.from(place);
     }
 
-    public List<MapPlaceResponse> getBookmarks(Member authenticatedMember) {
-        return placeRepository.findBookmarkedPlacesByMemberId(authenticatedMember.getId())
+    public List<MapPlaceResponse> getBookmarks(
+            Member authenticatedMember,
+            List<PlaceCategory> categories
+    ) {
+        List<Place> bookmarks = categories == null || categories.isEmpty()
+                ? placeRepository.findBookmarkedPlacesByMemberId(authenticatedMember.getId())
+                : placeRepository.findBookmarkedPlacesByMemberIdAndCategories(
+                        authenticatedMember.getId(), categories
+                );
+        return bookmarks
                 .stream()
                 .map(MapPlaceResponse::from)
                 .toList();
     }
 
     @Transactional
-    public void deleteBookmark(Member authenticatedMember, Long placeId) {
-        if (placeId == null || placeId <= 0) {
+    public void deleteBookmarks(Member authenticatedMember, List<Long> placeIds) {
+        if (placeIds == null || placeIds.isEmpty()
+                || placeIds.stream().anyMatch(id -> id == null || id <= 0)) {
             throw new GeneralException(PlaceErrorCode.INVALID_BOOKMARK_PLACE_IDS);
         }
         Member member = findMember(authenticatedMember.getId());
-        if (!member.removeBookmark(placeId)) {
+        if (!member.removeBookmarks(Set.copyOf(placeIds))) {
             throw new GeneralException(PlaceErrorCode.BOOKMARK_NOT_FOUND);
         }
     }

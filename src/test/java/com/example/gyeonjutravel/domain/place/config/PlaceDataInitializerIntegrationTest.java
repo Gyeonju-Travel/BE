@@ -57,7 +57,7 @@ class PlaceDataInitializerIntegrationTest {
     }
 
     @Test
-    void memberCanSaveListAndDeletePlaceBookmarkWithRequestBody() throws Exception {
+    void memberCanSaveListAndDeleteMultiplePlaceBookmarksWithRequestBody() throws Exception {
         Member member = memberRepository.save(Member.builder()
                 .email("bookmark@example.com")
                 .password("encoded-password")
@@ -66,8 +66,16 @@ class PlaceDataInitializerIntegrationTest {
                 .role(Role.USER)
                 .build());
         var places = placeRepository.findAll();
-        Long firstPlaceId = places.get(0).getId();
-        Long secondPlaceId = places.get(1).getId();
+        Long firstPlaceId = places.stream()
+                .filter(place -> place.getCategory() == PlaceCategory.RESTAURANT)
+                .findFirst()
+                .orElseThrow()
+                .getId();
+        Long secondPlaceId = places.stream()
+                .filter(place -> place.getCategory() == PlaceCategory.CAFE)
+                .findFirst()
+                .orElseThrow()
+                .getId();
         CustomUserDetails principal = new CustomUserDetails(member);
 
         mockMvc.perform(post("/api/places/{placeId}/bookmarks", firstPlaceId).with(user(principal)))
@@ -82,14 +90,20 @@ class PlaceDataInitializerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.length()").value(2));
 
+        mockMvc.perform(get("/api/places/bookmarks")
+                        .param("categories", "CAFE")
+                        .with(user(principal)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.length()").value(1))
+                .andExpect(jsonPath("$.result[0].id").value(secondPlaceId))
+                .andExpect(jsonPath("$.result[0].category").value("CAFE"));
+
         mockMvc.perform(delete("/api/places/bookmarks")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"placeId\":" + firstPlaceId + "}")
+                        .content("{\"placeIds\":[" + firstPlaceId + "," + secondPlaceId + "]}")
                         .with(user(principal)))
                 .andExpect(status().isOk());
 
-        assertThat(placeRepository.findBookmarkedPlacesByMemberId(member.getId()))
-                .extracting("id")
-                .containsExactly(secondPlaceId);
+        assertThat(placeRepository.findBookmarkedPlacesByMemberId(member.getId())).isEmpty();
     }
 }
