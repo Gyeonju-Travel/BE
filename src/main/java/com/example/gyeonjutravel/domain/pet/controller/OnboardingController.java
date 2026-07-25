@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -33,7 +34,7 @@ public class OnboardingController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<PetOnboardingResponse> complete(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestPart("request") PetOnboardingRequest request,
+            @Valid @ModelAttribute PetOnboardingRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.created(petService.completeOnboarding(userDetails.member().getId(), request, image));

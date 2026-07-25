@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +39,7 @@ public class PetController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<PetDetailResponse> register(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestPart("request") PetRegistrationRequest request,
+            @Valid @ModelAttribute PetRegistrationRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.created(petService.register(userDetails.member().getId(), request, image));
@@ -66,7 +67,7 @@ public class PetController {
     public ApiResponse<PetDetailResponse> updateProfile(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long petId,
-            @Valid @RequestPart("request") PetProfileUpdateRequest request,
+            @Valid @ModelAttribute PetProfileUpdateRequest request,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         return ApiResponse.ok(petService.updateProfile(userDetails.member().getId(), petId, request, image));
