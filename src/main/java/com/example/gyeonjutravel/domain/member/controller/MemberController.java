@@ -55,7 +55,9 @@ public class MemberController {
         return ApiResponse.ok(memberService.login(request));
     }
 
-    @Operation(summary = "비밀번호 재설정 인증번호 발송")
+    @Operation(summary = "비밀번호 재설정 인증번호 발송",
+            description = "이메일로 인증번호가 발송됩니다."
+    )
     @PostMapping("/password-reset/verification-code")
     public ApiResponse<Void> sendPasswordResetVerificationCode(
             @Valid @RequestBody PasswordResetVerificationRequest request
@@ -64,7 +66,9 @@ public class MemberController {
         return ApiResponse.ok();
     }
 
-    @Operation(summary = "비밀번호 재설정 인증번호 확인")
+    @Operation(summary = "비밀번호 재설정 인증번호 확인",
+            description = "발송된 인증번호를 5분안에 입력합니다."
+    )
     @PostMapping("/password-reset/verification-code/confirm")
     public ApiResponse<PasswordResetVerificationResponse> verifyPasswordResetCode(
             @Valid @RequestBody PasswordResetCodeConfirmRequest request
@@ -72,7 +76,9 @@ public class MemberController {
         return ApiResponse.ok(memberService.verifyPasswordResetCode(request));
     }
 
-    @Operation(summary = "인증 완료 후 비밀번호 재설정")
+    @Operation(summary = "인증 완료 후 비밀번호 재설정",
+            description = "비밀번호를 재설정합니다."
+    )
     @PatchMapping("/password-reset")
     public ApiResponse<Void> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
         memberService.resetPassword(request);
