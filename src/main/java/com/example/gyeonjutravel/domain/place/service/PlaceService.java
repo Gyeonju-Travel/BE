@@ -1,8 +1,10 @@
 package com.example.gyeonjutravel.domain.place.service;
 
+import com.example.gyeonjutravel.domain.member.entity.Member;
+import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
+import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.place.dto.response.MapPlacePageResponse;
 import com.example.gyeonjutravel.domain.place.dto.response.MapPlaceResponse;
-import com.example.gyeonjutravel.domain.place.dto.response.PlaceCategoryResponse;
 import com.example.gyeonjutravel.domain.place.dto.response.PlaceDetailResponse;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,6 +30,7 @@ import java.util.Locale;
 public class PlaceService {
 
     private final PlaceRepository placeRepository;
+    private final MemberRepository memberRepository;
 
     public MapPlacePageResponse search(
             List<PlaceCategory> categories,
@@ -52,6 +54,33 @@ public class PlaceService {
         return PlaceDetailResponse.from(place);
     }
 
+    @Transactional
+    public MapPlaceResponse saveBookmark(Member authenticatedMember, Long placeId) {
+        Member member = findMember(authenticatedMember.getId());
+        Place place = findPlace(placeId);
+        if (!member.addBookmark(place)) {
+            throw new GeneralException(PlaceErrorCode.BOOKMARK_ALREADY_EXISTS);
+        }
+        return MapPlaceResponse.from(place);
+    }
+
+    public List<MapPlaceResponse> getBookmarks(Member authenticatedMember) {
+        return placeRepository.findBookmarkedPlacesByMemberId(authenticatedMember.getId())
+                .stream()
+                .map(MapPlaceResponse::from)
+                .toList();
+    }
+
+    @Transactional
+    public void deleteBookmark(Member authenticatedMember, Long placeId) {
+        if (placeId == null || placeId <= 0) {
+            throw new GeneralException(PlaceErrorCode.INVALID_BOOKMARK_PLACE_IDS);
+        }
+        Member member = findMember(authenticatedMember.getId());
+        if (!member.removeBookmark(placeId)) {
+            throw new GeneralException(PlaceErrorCode.BOOKMARK_NOT_FOUND);
+        }
+    }
 
     private Specification<Place> createSpecification(
             List<PlaceCategory> categories,
@@ -80,6 +109,16 @@ public class PlaceService {
         if (page < 0 || size < 1 || size > 200) {
             throw new GeneralException(PlaceErrorCode.INVALID_PAGE_SIZE);
         }
+    }
+
+    private Member findMember(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private Place findPlace(Long placeId) {
+        return placeRepository.findById(placeId)
+                .orElseThrow(() -> new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND));
     }
 
 }

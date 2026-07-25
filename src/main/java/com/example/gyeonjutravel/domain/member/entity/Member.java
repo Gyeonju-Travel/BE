@@ -1,5 +1,6 @@
 package com.example.gyeonjutravel.domain.member.entity;
 
+import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.global.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,11 +9,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Entity
@@ -40,6 +48,18 @@ public class Member extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @ManyToMany
+    @JoinTable(
+            name = "place_bookmarks",
+            joinColumns = @JoinColumn(name = "member_id"),
+            inverseJoinColumns = @JoinColumn(name = "place_id"),
+            uniqueConstraints = @UniqueConstraint(
+                    name = "place_bookmarks_member_place",
+                    columnNames = {"member_id", "place_id"}
+            )
+    )
+    private Set<Place> bookmarkedPlaces = new LinkedHashSet<>();
+
     @Builder
     private Member(String email, String password, String nickname, String phoneNumber, Role role) {
         this.email = email;
@@ -47,5 +67,13 @@ public class Member extends BaseEntity {
         this.nickname = nickname;
         this.phoneNumber = phoneNumber;
         this.role = role;
+    }
+
+    public boolean addBookmark(Place place) {
+        return bookmarkedPlaces.add(place);
+    }
+
+    public boolean removeBookmark(Long placeId) {
+        return bookmarkedPlaces.removeIf(place -> place.getId().equals(placeId));
     }
 }
