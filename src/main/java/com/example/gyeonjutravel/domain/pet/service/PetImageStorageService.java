@@ -2,9 +2,8 @@ package com.example.gyeonjutravel.domain.pet.service;
 
 import com.example.gyeonjutravel.domain.pet.exception.PetErrorCode;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class PetImageStorageService {
 
@@ -54,20 +54,4 @@ public class PetImageStorageService {
         }
     }
 
-    public Resource load(String filename) {
-        if (!filename.matches("[0-9a-fA-F-]+\\.(jpg|png|webp)")) {
-            throw new GeneralException(PetErrorCode.PET_IMAGE_NOT_FOUND);
-        }
-
-        Path imagePath = uploadDirectory.resolve(filename).normalize();
-        if (!imagePath.startsWith(uploadDirectory) || !Files.isRegularFile(imagePath)) {
-            throw new GeneralException(PetErrorCode.PET_IMAGE_NOT_FOUND);
-        }
-
-        try {
-            return new UrlResource(imagePath.toUri());
-        } catch (IOException exception) {
-            throw new GeneralException(PetErrorCode.PET_IMAGE_NOT_FOUND);
-        }
-    }
 }
