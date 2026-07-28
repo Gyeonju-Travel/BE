@@ -2,34 +2,60 @@ package com.example.gyeonjutravel.domain.member.service;
 
 import com.example.gyeonjutravel.domain.member.dto.request.MemberLoginRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.MemberSignUpRequest;
+import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetCodeConfirmRequest;
+import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetRequest;
+import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetVerificationRequest;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberAuthResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberSignUpResponse;
+import com.example.gyeonjutravel.domain.member.dto.response.PasswordResetVerificationResponse;
 import com.example.gyeonjutravel.domain.member.entity.BlacklistedToken;
 import com.example.gyeonjutravel.domain.member.entity.Member;
-import com.example.gyeonjutravel.domain.member.entity.Role;
+import com.example.gyeonjutravel.domain.member.entity.PasswordResetVerification;
 import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.repository.BlacklistedTokenRepository;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
+import com.example.gyeonjutravel.domain.member.repository.PasswordResetVerificationRepository;
+import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Base64;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MemberService {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+    private static final int RESET_TOKEN_BYTE_LENGTH = 32;
+
     private final MemberRepository memberRepository;
     private final BlacklistedTokenRepository blacklistedTokenRepository;
+    private final PasswordResetVerificationRepository passwordResetVerificationRepository;
+    private final PetRepository petRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordResetMailService passwordResetMailService;
+
+    @Value("${app.password-reset.code-expiration-minutes:5}")
+    private long passwordResetCodeExpirationMinutes;
+
+    @Value("${app.password-reset.reset-token-expiration-minutes:10}")
+    private long passwordResetTokenExpirationMinutes;
 
     @Transactional
     public MemberSignUpResponse signUp(MemberSignUpRequest request) {
-        String email = request.email().toLowerCase();
+        validatePasswordConfirmation(request.password(), request.passwordConfirmation());
+
+        String email = normalizeEmail(request.email());
         if (memberRepository.existsByEmail(email)) {
             throw new GeneralException(MemberErrorCode.DUPLICATE_EMAIL);
         }
@@ -37,16 +63,17 @@ public class MemberService {
         Member member = memberRepository.save(Member.builder()
                 .email(email)
                 .password(passwordEncoder.encode(request.password()))
-                .nickname(request.nickname())
+                .name(request.name())
+                .birthDate(request.birthDate())
+                .gender(request.gender())
                 .phoneNumber(request.phoneNumber())
-                .role(Role.USER)
                 .build());
 
         return createSignUpResponse(member);
     }
 
     public MemberAuthResponse login(MemberLoginRequest request) {
-        String email = request.email().toLowerCase();
+        String email = normalizeEmail(request.email());
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new GeneralException(MemberErrorCode.INVALID_LOGIN));
 
@@ -58,6 +85,81 @@ public class MemberService {
     }
 
     @Transactional
+    public void sendPasswordResetVerificationCode(PasswordResetVerificationRequest request) {
+        String email = normalizeEmail(request.email());
+        if (!memberRepository.existsByEmail(email)) {
+            throw new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND);
+        }
+
+        String verificationCode = String.format(Locale.ROOT, "%06d", SECURE_RANDOM.nextInt(1_000_000));
+        String codeHash = passwordEncoder.encode(verificationCode);
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(passwordResetCodeExpirationMinutes);
+
+        PasswordResetVerification verification = passwordResetVerificationRepository.findByEmail(email)
+                .map(existing -> {
+                    existing.update(codeHash, expiresAt);
+                    return existing;
+                })
+                .orElseGet(() -> PasswordResetVerification.builder()
+                        .email(email)
+                        .codeHash(codeHash)
+                        .expiresAt(expiresAt)
+                        .build());
+        passwordResetVerificationRepository.save(verification);
+        passwordResetMailService.sendVerificationCode(
+                email,
+                verificationCode,
+                passwordResetCodeExpirationMinutes
+        );
+    }
+
+    @Transactional
+    public PasswordResetVerificationResponse verifyPasswordResetCode(PasswordResetCodeConfirmRequest request) {
+        String email = normalizeEmail(request.email());
+        PasswordResetVerification verification = passwordResetVerificationRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.INVALID_VERIFICATION_CODE));
+
+        if (verification.isExpired(LocalDateTime.now())) {
+            throw new GeneralException(MemberErrorCode.EXPIRED_VERIFICATION_CODE);
+        }
+        if (!passwordEncoder.matches(request.verificationCode(), verification.getCodeHash())) {
+            throw new GeneralException(MemberErrorCode.INVALID_VERIFICATION_CODE);
+        }
+
+        String resetToken = createResetToken();
+        verification.verify(
+                passwordEncoder.encode(resetToken),
+                LocalDateTime.now().plusMinutes(passwordResetTokenExpirationMinutes)
+        );
+        return new PasswordResetVerificationResponse(
+                resetToken,
+                passwordResetTokenExpirationMinutes * 60
+        );
+    }
+
+    @Transactional
+    public void resetPassword(PasswordResetRequest request) {
+        validatePasswordConfirmation(request.newPassword(), request.newPasswordConfirmation());
+
+        String email = normalizeEmail(request.email());
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
+        PasswordResetVerification verification = passwordResetVerificationRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.INVALID_PASSWORD_RESET_TOKEN));
+
+        if (verification.getResetTokenHash() == null
+                || !passwordEncoder.matches(request.resetToken(), verification.getResetTokenHash())) {
+            throw new GeneralException(MemberErrorCode.INVALID_PASSWORD_RESET_TOKEN);
+        }
+        if (verification.isResetTokenExpired(LocalDateTime.now())) {
+            throw new GeneralException(MemberErrorCode.EXPIRED_PASSWORD_RESET_TOKEN);
+        }
+
+        member.changePassword(passwordEncoder.encode(request.newPassword()));
+        passwordResetVerificationRepository.delete(verification);
+    }
+
+    @Transactional
     public void logout(String token) {
         blacklistToken(token);
     }
@@ -65,6 +167,7 @@ public class MemberService {
     @Transactional
     public void withdraw(Member member, String token) {
         blacklistToken(token);
+        petRepository.deleteAllByMemberId(member.getId());
         memberRepository.delete(member);
     }
 
@@ -76,7 +179,8 @@ public class MemberService {
                 accessToken,
                 refreshToken,
                 jwtTokenProvider.getAccessTokenExpiresInSeconds(),
-                jwtTokenProvider.getRefreshTokenExpiresInSeconds()
+                jwtTokenProvider.getRefreshTokenExpiresInSeconds(),
+                petRepository.existsByMemberIdAndRepresentativeTrue(member.getId())
         );
     }
 
@@ -85,11 +189,30 @@ public class MemberService {
         return new MemberSignUpResponse(
                 member.getId(),
                 member.getEmail(),
-                member.getNickname(),
+                member.getName(),
+                member.getBirthDate(),
+                member.getGender(),
                 member.getPhoneNumber(),
                 accessToken,
-                jwtTokenProvider.getAccessTokenExpiresInSeconds()
+                jwtTokenProvider.getAccessTokenExpiresInSeconds(),
+                false
         );
+    }
+
+    private void validatePasswordConfirmation(String password, String passwordConfirmation) {
+        if (!password.equals(passwordConfirmation)) {
+            throw new GeneralException(MemberErrorCode.PASSWORD_CONFIRMATION_MISMATCH);
+        }
+    }
+
+    private String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private String createResetToken() {
+        byte[] tokenBytes = new byte[RESET_TOKEN_BYTE_LENGTH];
+        SECURE_RANDOM.nextBytes(tokenBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(tokenBytes);
     }
 
     private void blacklistToken(String token) {

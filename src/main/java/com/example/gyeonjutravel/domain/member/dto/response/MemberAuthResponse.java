@@ -5,6 +5,7 @@ public record MemberAuthResponse(
         String accessToken,
         String refreshToken,
         Long accessTokenExpiresIn,
-        Long refreshTokenExpiresIn
+        Long refreshTokenExpiresIn,
+        boolean onboardingCompleted
 ) {
 }
