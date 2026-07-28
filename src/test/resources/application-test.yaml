@@ -16,3 +16,7 @@ jwt:
   secret: test-secret-key-test-secret-key-test-secret-key-test-secret-key
   access-token-expiration-minutes: 60
   refresh-token-expiration-days: 14
+
+app:
+  place-data:
+    initialize: false
