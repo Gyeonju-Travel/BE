@@ -87,6 +87,29 @@ public class PetService {
     }
 
     @Transactional
+    public PetListResponse changeRepresentative(Long memberId, Long petId) {
+        List<Pet> pets = petRepository.findAllByMemberIdForUpdate(memberId);
+        Pet selectedPet = pets.stream()
+                .filter(pet -> pet.getId().equals(petId))
+                .findFirst()
+                .orElseThrow(() -> new GeneralException(PetErrorCode.PET_NOT_FOUND));
+
+        pets.forEach(pet -> {
+            if (pet == selectedPet) {
+                pet.markAsRepresentative();
+            } else {
+                pet.unmarkAsRepresentative();
+            }
+        });
+
+        List<PetSummaryResponse> otherPets = pets.stream()
+                .filter(pet -> pet != selectedPet)
+                .map(PetSummaryResponse::from)
+                .toList();
+        return new PetListResponse(RepresentativePetResponse.from(selectedPet), otherPets);
+    }
+
+    @Transactional
     public PetDetailResponse updateProfile(
             Long memberId,
             Long petId,

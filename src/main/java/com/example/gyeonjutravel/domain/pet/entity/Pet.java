@@ -112,4 +112,12 @@ public class Pet extends BaseEntity {
         this.gender = gender;
         this.personality = personality;
     }
+
+    public void markAsRepresentative() {
+        this.representative = true;
+    }
+
+    public void unmarkAsRepresentative() {
+        this.representative = false;
+    }
 }
