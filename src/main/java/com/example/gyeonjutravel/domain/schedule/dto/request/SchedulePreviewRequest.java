@@ -19,7 +19,7 @@ public record SchedulePreviewRequest(
         LocalDate date,
 
         @NotEmpty(message = "장소를 한 개 이상 선택해주세요.")
-        @Size(max = 4, message = "장소는 최대 4개까지 선택할 수 있습니다.")
+        @Size(max = 5, message = "장소는 최대 5개까지 선택할 수 있습니다.")
         List<@NotNull @Positive Long> placeIds
 ) {
 }
