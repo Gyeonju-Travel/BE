@@ -6,8 +6,11 @@ import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
+import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleDeleteRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.SchedulePreviewRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.DepartureResponse;
+import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDateResponse;
+import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDetailResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePlaceResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
@@ -99,6 +102,15 @@ public class ScheduleService {
         );
     }
 
+    public ScheduleDateResponse getByDate(Long memberId, java.time.LocalDate date) {
+        List<ScheduleDetailResponse> schedules = scheduleRepository
+                .findAllByMemberIdAndTravelDateWithItems(memberId, date)
+                .stream()
+                .map(ScheduleDetailResponse::from)
+                .toList();
+        return ScheduleDateResponse.of(date, schedules);
+    }
+
     @Transactional
     public ScheduleResponse create(Long memberId, ScheduleCreateRequest request) {
         SchedulePreview preview = scheduleMatrixCache.getPreview(request.matrixToken(), memberId);
@@ -143,6 +155,20 @@ public class ScheduleService {
                 DepartureResponse.from(savedSchedule.getDepartureArea()),
                 savedPlaces
         );
+    }
+
+    @Transactional
+    public void delete(Long memberId, ScheduleDeleteRequest request) {
+        List<Long> scheduleIds = request.scheduleIds();
+        if (new HashSet<>(scheduleIds).size() != scheduleIds.size()) {
+            throw new GeneralException(ScheduleErrorCode.INVALID_SCHEDULE_IDS);
+        }
+
+        List<Schedule> schedules = scheduleRepository.findAllByMemberIdAndIdIn(memberId, scheduleIds);
+        if (schedules.size() != scheduleIds.size()) {
+            throw new GeneralException(ScheduleErrorCode.SCHEDULE_NOT_FOUND);
+        }
+        scheduleRepository.deleteAll(schedules);
     }
 
     private List<Place> findBookmarkedPlaces(Long memberId, List<Long> placeIds) {

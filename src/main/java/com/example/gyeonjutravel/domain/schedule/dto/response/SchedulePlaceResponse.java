@@ -1,7 +1,6 @@
 package com.example.gyeonjutravel.domain.schedule.dto.response;
 
 import com.example.gyeonjutravel.domain.place.entity.Place;
-import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 
 public record SchedulePlaceResponse(
         int visitOrder,
