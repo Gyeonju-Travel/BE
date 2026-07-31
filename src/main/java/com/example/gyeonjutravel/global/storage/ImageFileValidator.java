@@ -1,6 +1,8 @@
 package com.example.gyeonjutravel.global.storage;
 
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
+import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
+
 import java.util.Map;
 
 final class ImageFileValidator {
@@ -14,7 +16,7 @@ final class ImageFileValidator {
     static String extensionOf(String contentType) {
         String extension = ALLOWED_EXTENSIONS.get(contentType);
         if (extension == null) {
-            throw new GeneralException(StorageErrorCode.INVALID_IMAGE);
+            throw new GeneralException(ErrorCode.INVALID_IMAGE);
         }
         return extension;
     }

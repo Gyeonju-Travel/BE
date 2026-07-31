@@ -1,6 +1,7 @@
 package com.example.gyeonjutravel.global.storage;
 
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
+import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,7 +43,7 @@ public class S3ImageStorageService implements ImageStorageService {
             s3Client.putObject(request, RequestBody.fromInputStream(image.getInputStream(), image.getSize()));
             return s3Client.utilities().getUrl(GetUrlRequest.builder().bucket(bucket).key(key).build()).toString();
         } catch (IOException | RuntimeException exception) {
-            throw new GeneralException(StorageErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new GeneralException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
 }

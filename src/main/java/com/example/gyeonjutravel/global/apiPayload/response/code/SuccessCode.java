@@ -1,4 +1,4 @@
-package com.example.gyeonjutravel.global.apiPayload.response;
+package com.example.gyeonjutravel.global.apiPayload.response.code;
 
 import org.springframework.http.HttpStatus;
 

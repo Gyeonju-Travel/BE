@@ -1,6 +1,7 @@
 package com.example.gyeonjutravel.global.storage;
 
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
+import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -32,14 +33,14 @@ public class LocalImageStorageService implements ImageStorageService {
         Path targetDirectory = rootDirectory.resolve(directory).normalize();
         Path target = targetDirectory.resolve(filename).normalize();
         if (!target.startsWith(rootDirectory)) {
-            throw new GeneralException(StorageErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new GeneralException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
         try {
             Files.createDirectories(targetDirectory);
             Files.copy(image.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
             return "/api/" + directory + "/" + filename;
         } catch (IOException exception) {
-            throw new GeneralException(StorageErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new GeneralException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
 }
