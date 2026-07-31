@@ -49,3 +49,10 @@ app:
   password-reset:
     code-expiration-minutes: ${PASSWORD_RESET_CODE_EXPIRATION_MINUTES:5}
     reset-token-expiration-minutes: ${PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES:10}
+  schedule:
+    matrix-cache-ttl: ${SCHEDULE_MATRIX_CACHE_TTL:24h}
+    preview-ttl: ${SCHEDULE_PREVIEW_TTL:30m}
+
+tmap:
+  base-url: ${TMAP_BASE_URL:https://apis.openapi.sk.com}
+  app-key: ${TMAP_APP_KEY:}
