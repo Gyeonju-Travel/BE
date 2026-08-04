@@ -18,5 +18,7 @@ jwt:
   refresh-token-expiration-days: 14
 
 app:
+  storage:
+    provider: local
   place-data:
     initialize: false

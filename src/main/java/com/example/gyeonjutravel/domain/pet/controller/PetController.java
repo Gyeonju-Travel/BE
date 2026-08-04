@@ -68,6 +68,18 @@ public class PetController {
         return ApiResponse.ok(petService.get(userDetails.member().getId(), petId));
     }
 
+    @Operation(
+            summary = "대표 반려견 변경",
+            description = "선택한 반려견을 대표 반려견으로 변경하고 갱신된 반려견 목록을 반환합니다."
+    )
+    @PatchMapping("/{petId}/representative")
+    public ApiResponse<PetListResponse> changeRepresentative(
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long petId
+    ) {
+        return ApiResponse.ok(petService.changeRepresentative(userDetails.member().getId(), petId));
+    }
+
     @Operation(summary = "반려견 프로필 수정", description = "반려견의 정보를 수정합니다.")
     @PatchMapping(value = "/{petId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<PetDetailResponse> updateProfile(

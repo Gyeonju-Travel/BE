@@ -60,10 +60,6 @@ public class Pet extends BaseEntity {
     @Column(length = 30)
     private TravelPreference travelPreference;
 
-    @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private WalkingStyle walkingStyle;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
@@ -79,8 +75,7 @@ public class Pet extends BaseEntity {
             PetGender gender,
             PetPersonality personality,
             boolean representative,
-            TravelPreference travelPreference,
-            WalkingStyle walkingStyle
+            TravelPreference travelPreference
     ) {
         this.member = member;
         this.name = name;
@@ -92,7 +87,6 @@ public class Pet extends BaseEntity {
         this.personality = personality;
         this.representative = representative;
         this.travelPreference = travelPreference;
-        this.walkingStyle = walkingStyle;
     }
 
     public void updateProfile(
@@ -111,5 +105,13 @@ public class Pet extends BaseEntity {
         this.age = age;
         this.gender = gender;
         this.personality = personality;
+    }
+
+    public void markAsRepresentative() {
+        this.representative = true;
+    }
+
+    public void unmarkAsRepresentative() {
+        this.representative = false;
     }
 }

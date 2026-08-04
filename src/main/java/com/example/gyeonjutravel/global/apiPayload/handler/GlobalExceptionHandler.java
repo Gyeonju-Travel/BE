@@ -3,7 +3,7 @@ package com.example.gyeonjutravel.global.apiPayload.handler;
 import java.util.List;
 
 import com.example.gyeonjutravel.global.apiPayload.exception.BaseErrorCode;
-import com.example.gyeonjutravel.global.apiPayload.response.ErrorCode;
+import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
 import com.example.gyeonjutravel.global.apiPayload.response.ErrorResponse;
 import com.example.gyeonjutravel.global.apiPayload.response.FieldErrorResponse;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
