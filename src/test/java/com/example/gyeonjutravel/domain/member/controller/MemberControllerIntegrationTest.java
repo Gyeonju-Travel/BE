@@ -158,16 +158,15 @@ class MemberControllerIntegrationTest {
                 .path("accessToken")
                 .asText();
 
-        MockMultipartFile onboardingRequest = jsonPart("""
-                {
-                  "name": "황남이",
-                  "travelPreference": "PHOTO_SPOT",
-                  "size": "SMALL",
-                  "walkingStyle": "SHORT_WALK"
-                }
-                """);
         MvcResult petCreateResult = mockMvc.perform(multipart("/api/onboarding")
-                        .file(onboardingRequest)
+                        .file(jsonPart("""
+                                {
+                                  "name": "황남이",
+                                  "travelPreference": "PHOTO_SPOT",
+                                  "size": "SMALL",
+                                  "personality": "RELAXED"
+                                }
+                                """))
                         .file(imagePart("hwangnam.png"))
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
@@ -176,29 +175,33 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.profileImageUrl").value(startsWith("/api/pet-images/")))
                 .andExpect(jsonPath("$.result.travelPreference").value("PHOTO_SPOT"))
                 .andExpect(jsonPath("$.result.size").value("SMALL"))
-                .andExpect(jsonPath("$.result.walkingStyle").value("SHORT_WALK"))
+                .andExpect(jsonPath("$.result.personality").value("RELAXED"))
                 .andExpect(jsonPath("$.result.breed").doesNotExist())
                 .andExpect(jsonPath("$.result.age").doesNotExist())
                 .andExpect(jsonPath("$.result.gender").doesNotExist())
-                .andExpect(jsonPath("$.result.personality").doesNotExist())
+                .andExpect(jsonPath("$.result.walkingStyle").doesNotExist())
                 .andReturn();
         long petId = objectMapper.readTree(petCreateResult.getResponse().getContentAsString())
                 .path("result")
                 .path("petId")
                 .asLong();
 
-        MockMultipartFile profileUpdateRequest = jsonPart("""
-                {
-                  "name": "황남이",
-                  "breed": "웰시코기",
-                  "size": "MEDIUM",
-                  "age": 4,
-                  "gender": "MALE",
-                  "personality": "ACTIVE"
-                }
-                """);
+        mockMvc.perform(get("/api/pets/{petId}", petId)
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.personality").value("RELAXED"));
+
         mockMvc.perform(multipart("/api/pets/{petId}", petId)
-                        .file(profileUpdateRequest)
+                        .file(jsonPart("""
+                                {
+                                  "name": "황남이",
+                                  "breed": "웰시코기",
+                                  "size": "MEDIUM",
+                                  "age": 4,
+                                  "gender": "MALE",
+                                  "personality": "ACTIVE"
+                                }
+                                """))
                         .file(imagePart("hwangnam-new.png"))
                         .with(request -> {
                             request.setMethod("PATCH");
@@ -224,18 +227,17 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.travelPreference").doesNotExist())
                 .andExpect(jsonPath("$.result.walkingStyle").doesNotExist());
 
-        MockMultipartFile registrationRequest = jsonPart("""
-                {
-                  "name": "첨성대",
-                  "breed": "골든리트리버",
-                  "size": "LARGE",
-                  "age": 2,
-                  "gender": "FEMALE",
-                  "personality": "FRIENDLY"
-                }
-                """);
         MvcResult secondPetCreateResult = mockMvc.perform(multipart("/api/pets")
-                        .file(registrationRequest)
+                        .file(jsonPart("""
+                                {
+                                  "name": "첨성대",
+                                  "breed": "골든리트리버",
+                                  "size": "LARGE",
+                                  "age": 2,
+                                  "gender": "FEMALE",
+                                  "personality": "FRIENDLY"
+                                }
+                                """))
                         .file(imagePart("cheomseongdae.png"))
                         .header("Authorization", "Bearer " + accessToken)
                         .contentType(MediaType.MULTIPART_FORM_DATA))
