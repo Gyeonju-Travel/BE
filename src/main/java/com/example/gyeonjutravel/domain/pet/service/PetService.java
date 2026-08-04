@@ -15,6 +15,7 @@ import com.example.gyeonjutravel.domain.pet.entity.Pet;
 import com.example.gyeonjutravel.domain.pet.exception.PetErrorCode;
 import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
+import com.example.gyeonjutravel.global.storage.ImageStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +30,7 @@ public class PetService {
 
     private final PetRepository petRepository;
     private final MemberRepository memberRepository;
-    private final PetImageStorageService petImageStorageService;
+    private final ImageStorageService imageStorageService;
 
     @Transactional
     public PetOnboardingResponse completeOnboarding(
@@ -44,7 +45,7 @@ public class PetService {
         Pet pet = petRepository.save(Pet.builder()
                 .member(findMember(memberId))
                 .name(request.name().trim())
-                .profileImageUrl(petImageStorageService.store(image))
+                .profileImageUrl(imageStorageService.upload(image, "pet-images"))
                 .size(request.size())
                 .representative(true)
                 .travelPreference(request.travelPreference())
@@ -58,7 +59,7 @@ public class PetService {
         Pet pet = petRepository.save(Pet.builder()
                 .member(findMember(memberId))
                 .name(request.name().trim())
-                .profileImageUrl(petImageStorageService.store(image))
+                .profileImageUrl(imageStorageService.upload(image, "pet-images"))
                 .breed(request.breed().trim())
                 .size(request.size())
                 .age(request.age())
@@ -119,7 +120,7 @@ public class PetService {
         Pet pet = findOwnedPet(memberId, petId);
         String profileImageUrl = image == null || image.isEmpty()
                 ? pet.getProfileImageUrl()
-                : petImageStorageService.store(image);
+                : imageStorageService.upload(image, "pet-images");
         pet.updateProfile(
                 request.name().trim(),
                 profileImageUrl,
