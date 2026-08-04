@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.schedule.controller;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleDeleteRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.SchedulePreviewRequest;
+import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleUpdateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDateResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
@@ -20,6 +21,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -57,6 +60,18 @@ public class ScheduleController {
         return ApiResponse.ok(scheduleService.preview(userDetails.member().getId(), request));
     }
 
+    @Operation(summary = "일정 수정 미리보기", description = "변경할 출발지와 장소를 가까운 순서로 추천하고 수정용 토큰을 발급합니다.")
+    @PostMapping("/{scheduleId}/preview")
+    public ApiResponse<SchedulePreviewResponse> updatePreview(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody SchedulePreviewRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.ok(scheduleService.updatePreview(
+                userDetails.member().getId(), scheduleId, request
+        ));
+    }
+
     @Operation(
             summary = "일정 저장",
             description = "미리보기의 장소를 사용자가 확정한 순서와 도보시간으로 저장합니다."
@@ -68,6 +83,16 @@ public class ScheduleController {
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ApiResponse.created(scheduleService.create(userDetails.member().getId(), request));
+    }
+
+    @Operation(summary = "일정 경로 수정", description = "미리보기에서 확정한 출발지, 날짜, 장소와 순서로 일정을 수정합니다.")
+    @PutMapping("/{scheduleId}")
+    public ApiResponse<ScheduleResponse> update(
+            @PathVariable Long scheduleId,
+            @Valid @RequestBody ScheduleUpdateRequest request,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.ok(scheduleService.update(userDetails.member().getId(), scheduleId, request));
     }
 
     @Operation(summary = "일정 삭제", description = "선택한 일정을 모두 삭제합니다.")

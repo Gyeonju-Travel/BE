@@ -8,6 +8,7 @@ public enum ScheduleErrorCode implements BaseErrorCode {
     PLACE_NOT_BOOKMARKED(HttpStatus.BAD_REQUEST, "SCHEDULE_400_2", "선택한 장소 중 저장하지 않은 장소가 있습니다."),
     INVALID_PLACE_ORDER(HttpStatus.BAD_REQUEST, "SCHEDULE_400_3", "미리보기와 동일한 장소를 중복 없이 정렬해주세요."),
     INVALID_SCHEDULE_IDS(HttpStatus.BAD_REQUEST, "SCHEDULE_400_4", "삭제할 일정 ID를 중복 없이 입력해주세요."),
+    PREVIEW_DEPARTURE_MISMATCH(HttpStatus.BAD_REQUEST, "SCHEDULE_400_5", "미리보기와 출발지가 일치하지 않습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SCHEDULE_404_1", "일정을 찾을 수 없습니다."),
     PREVIEW_EXPIRED(HttpStatus.GONE, "SCHEDULE_410_1", "일정 미리보기가 만료되었습니다. 다시 계산해주세요."),
     WALKING_ROUTE_NOT_FOUND(HttpStatus.UNPROCESSABLE_ENTITY, "SCHEDULE_422_1", "선택한 장소 사이의 도보 경로를 찾을 수 없습니다."),

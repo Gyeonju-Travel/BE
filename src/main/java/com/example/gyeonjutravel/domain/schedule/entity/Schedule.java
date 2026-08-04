@@ -56,6 +56,15 @@ public class Schedule extends BaseEntity {
         this.departureArea = departureArea;
     }
 
+    public void updateDate(LocalDate travelDate) {
+        this.travelDate = travelDate;
+    }
+
+    public void updateRoute(DepartureArea departureArea) {
+        this.departureArea = departureArea;
+        this.items.clear();
+    }
+
     public void addItem(
             Place place,
             int visitOrder,

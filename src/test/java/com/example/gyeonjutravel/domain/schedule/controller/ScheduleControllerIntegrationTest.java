@@ -38,6 +38,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -165,6 +166,101 @@ class ScheduleControllerIntegrationTest {
         assertThat(savedSchedule.getItems())
                 .extracting(item -> item.getWalkingDurationSeconds())
                 .containsExactly(900L, 400L, 200L);
+    }
+
+    @Test
+    void memberCanPreviewAllChangesAndReplaceRoute() throws Exception {
+        Member member = saveMember();
+        Place oldPlace = savePlace("SCHEDULE:UPDATE:OLD", "기존 장소", 129.2100, 35.8370);
+        Place newPlace = savePlace("SCHEDULE:UPDATE:NEW", "새 장소", 129.2200, 35.8330);
+        member.addBookmark(oldPlace);
+        member.addBookmark(newPlace);
+        memberRepository.flush();
+
+        LocalDate oldDate = LocalDate.now().plusDays(1);
+        Schedule schedule = new Schedule(member, oldDate, DepartureArea.HWANGRIDAN_GIL);
+        schedule.addItem(oldPlace, 1, 100, 120);
+        schedule = scheduleRepository.saveAndFlush(schedule);
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+
+        LocalDate changedDate = oldDate.plusDays(1);
+        MvcResult datePreviewResult = mockMvc.perform(post(
+                            "/api/schedules/{scheduleId}/preview", schedule.getId()
+                        )
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "departureArea": "HWANGRIDAN_GIL",
+                                  "date": "%s",
+                                  "placeIds": [%d]
+                                }
+                                """.formatted(changedDate, oldPlace.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.recommendedPlaces[0].placeId").value(oldPlace.getId()))
+                .andExpect(jsonPath("$.result.recommendedPlaces[0].walkingDurationSeconds").value(100))
+                .andReturn();
+        String dateMatrixToken = objectMapper.readTree(datePreviewResult.getResponse().getContentAsString())
+                .path("result")
+                .path("matrixToken")
+                .asText();
+        verify(walkingMatrixClient, times(0)).calculate(anyList());
+
+        mockMvc.perform(put("/api/schedules/{scheduleId}", schedule.getId())
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "matrixToken": "%s",
+                                  "departureArea": "HWANGRIDAN_GIL",
+                                  "orderedPlaceIds": [%d]
+                                }
+                                """.formatted(dateMatrixToken, oldPlace.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.date").value(changedDate.toString()));
+        verify(walkingMatrixClient, times(0)).calculate(anyList());
+
+        when(walkingMatrixClient.calculate(anyList()))
+                .thenAnswer(invocation -> matrixFor(
+                        invocation.getArgument(0),
+                        oldPlace.getId(),
+                        newPlace.getId(),
+                        -1L
+                ));
+        MvcResult previewResult = mockMvc.perform(post("/api/schedules/{scheduleId}/preview", schedule.getId())
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "departureArea": "CHEOMSEONGDAE",
+                                  "date": "%s",
+                                  "placeIds": [%d]
+                                }
+                                """.formatted(changedDate, newPlace.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.date").value(changedDate.toString()))
+                .andExpect(jsonPath("$.result.recommendedPlaces[0].placeId").value(newPlace.getId()))
+                .andReturn();
+        String matrixToken = objectMapper.readTree(previewResult.getResponse().getContentAsString())
+                .path("result")
+                .path("matrixToken")
+                .asText();
+
+        mockMvc.perform(put("/api/schedules/{scheduleId}", schedule.getId())
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "matrixToken": "%s",
+                                  "departureArea": "CHEOMSEONGDAE",
+                                  "orderedPlaceIds": [%d]
+                                }
+                                """.formatted(matrixToken, newPlace.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.date").value(changedDate.toString()))
+                .andExpect(jsonPath("$.result.departure.code").value("CHEOMSEONGDAE"))
+                .andExpect(jsonPath("$.result.places[0].placeId").value(newPlace.getId()));
+        verify(walkingMatrixClient, times(1)).calculate(anyList());
     }
 
     @Test

@@ -8,6 +8,7 @@ import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleDeleteRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.SchedulePreviewRequest;
+import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleUpdateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.DepartureResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDateResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDetailResponse;
@@ -23,6 +24,7 @@ import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.Pla
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.SchedulePreview;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.tmap.WalkingRoute;
+import com.example.gyeonjutravel.global.tmap.WalkingMatrix;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -102,6 +104,19 @@ public class ScheduleService {
         );
     }
 
+    public SchedulePreviewResponse updatePreview(
+            Long memberId,
+            Long scheduleId,
+            SchedulePreviewRequest request
+    ) {
+        Schedule schedule = findOwnedSchedule(memberId, scheduleId);
+        validateUniquePlaceIds(request.placeIds());
+        if (isDateOnlyChange(schedule, request)) {
+            return previewDateChange(memberId, schedule, request);
+        }
+        return preview(memberId, request);
+    }
+
     public ScheduleDateResponse getByDate(Long memberId, java.time.LocalDate date) {
         List<ScheduleDetailResponse> schedules = scheduleRepository
                 .findAllByMemberIdAndTravelDateWithItems(memberId, date)
@@ -158,6 +173,27 @@ public class ScheduleService {
     }
 
     @Transactional
+    public ScheduleResponse update(Long memberId, Long scheduleId, ScheduleUpdateRequest request) {
+        Schedule schedule = findOwnedSchedule(memberId, scheduleId);
+        SchedulePreview preview = scheduleMatrixCache.getPreview(request.matrixToken(), memberId);
+        if (preview.departureArea() != request.departureArea()) {
+            throw new GeneralException(ScheduleErrorCode.PREVIEW_DEPARTURE_MISMATCH);
+        }
+        validateOrder(preview.placeIds(), request.orderedPlaceIds());
+
+        List<Place> places = findBookmarkedPlaces(memberId, request.orderedPlaceIds());
+        Map<Long, Place> placesById = indexPlaces(places);
+
+        schedule.updateDate(preview.date());
+        schedule.updateRoute(preview.departureArea());
+        scheduleRepository.flush();
+        List<SchedulePlaceResponse> savedPlaces = addItems(schedule, request.orderedPlaceIds(), placesById, preview);
+
+        scheduleMatrixCache.consumePreview(request.matrixToken());
+        return toResponse(schedule, savedPlaces);
+    }
+
+    @Transactional
     public void delete(Long memberId, ScheduleDeleteRequest request) {
         List<Long> scheduleIds = request.scheduleIds();
         if (new HashSet<>(scheduleIds).size() != scheduleIds.size()) {
@@ -177,6 +213,100 @@ public class ScheduleService {
             throw new GeneralException(ScheduleErrorCode.PLACE_NOT_BOOKMARKED);
         }
         return places;
+    }
+
+    private Schedule findOwnedSchedule(Long memberId, Long scheduleId) {
+        return scheduleRepository.findByIdAndMemberId(scheduleId, memberId)
+                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.SCHEDULE_NOT_FOUND));
+    }
+
+    private boolean isDateOnlyChange(Schedule schedule, SchedulePreviewRequest request) {
+        List<Long> savedPlaceIds = schedule.getItems().stream()
+                .map(item -> item.getPlace().getId())
+                .toList();
+        return !schedule.getTravelDate().equals(request.date())
+                && schedule.getDepartureArea() == request.departureArea()
+                && savedPlaceIds.size() == request.placeIds().size()
+                && Set.copyOf(savedPlaceIds).equals(Set.copyOf(request.placeIds()));
+    }
+
+    private SchedulePreviewResponse previewDateChange(
+            Long memberId,
+            Schedule schedule,
+            SchedulePreviewRequest request
+    ) {
+        List<String> nodeKeys = new ArrayList<>();
+        List<WalkingRoute> routes = new ArrayList<>();
+        nodeKeys.add(ScheduleMatrixCache.START_NODE_KEY);
+        String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
+
+        for (var item : schedule.getItems()) {
+            String placeNodeKey = ScheduleMatrixCache.placeNodeKey(item.getPlace().getId());
+            nodeKeys.add(placeNodeKey);
+            routes.add(new WalkingRoute(
+                    previousNodeKey,
+                    placeNodeKey,
+                    item.getWalkingDurationSeconds(),
+                    item.getWalkingDistanceMeters()
+            ));
+            previousNodeKey = placeNodeKey;
+        }
+
+        MatrixPreview matrixPreview = scheduleMatrixCache.createPreviewFromMatrix(
+                memberId,
+                request.date(),
+                schedule.getDepartureArea(),
+                schedule.getItems().stream().map(item -> item.getPlace().getId()).toList(),
+                new WalkingMatrix(nodeKeys, routes)
+        );
+        List<SchedulePlaceResponse> places = schedule.getItems().stream()
+                .map(item -> SchedulePlaceResponse.preview(
+                        item.getVisitOrder(),
+                        item.getPlace(),
+                        item.getWalkingDurationSeconds(),
+                        item.getWalkingDistanceMeters()
+                ))
+                .toList();
+        return new SchedulePreviewResponse(
+                matrixPreview.token(),
+                matrixPreview.expiresAt(),
+                request.date(),
+                DepartureResponse.from(schedule.getDepartureArea()),
+                places,
+                List.of()
+        );
+    }
+
+    private List<SchedulePlaceResponse> addItems(
+            Schedule schedule,
+            List<Long> orderedPlaceIds,
+            Map<Long, Place> placesById,
+            SchedulePreview preview
+    ) {
+        List<SchedulePlaceResponse> savedPlaces = new ArrayList<>();
+        String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
+        for (int index = 0; index < orderedPlaceIds.size(); index++) {
+            Long placeId = orderedPlaceIds.get(index);
+            Place place = placesById.get(placeId);
+            WalkingRoute route = preview.matrix()
+                    .findRoute(previousNodeKey, ScheduleMatrixCache.placeNodeKey(placeId))
+                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            schedule.addItem(place, index + 1, route.durationSeconds(), route.distanceMeters());
+            savedPlaces.add(SchedulePlaceResponse.saved(
+                    index + 1, place, route.durationSeconds(), route.distanceMeters()
+            ));
+            previousNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
+        }
+        return savedPlaces;
+    }
+
+    private ScheduleResponse toResponse(Schedule schedule, List<SchedulePlaceResponse> places) {
+        return new ScheduleResponse(
+                schedule.getId(),
+                schedule.getTravelDate(),
+                DepartureResponse.from(schedule.getDepartureArea()),
+                places
+        );
     }
 
     private Map<Long, Place> indexPlaces(List<Place> places) {
