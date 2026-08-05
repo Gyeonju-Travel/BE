@@ -3,7 +3,6 @@ package com.example.gyeonjutravel.domain.schedule.controller;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleDeleteRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.SchedulePreviewRequest;
-import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleUpdateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDateResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
@@ -89,7 +88,7 @@ public class ScheduleController {
     @PutMapping("/{scheduleId}")
     public ApiResponse<ScheduleResponse> update(
             @PathVariable Long scheduleId,
-            @Valid @RequestBody ScheduleUpdateRequest request,
+            @Valid @RequestBody ScheduleCreateRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ApiResponse.ok(scheduleService.update(userDetails.member().getId(), scheduleId, request));
