@@ -8,7 +8,6 @@ import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleDeleteRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.request.SchedulePreviewRequest;
-import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleUpdateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.DepartureResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDateResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDetailResponse;
@@ -25,6 +24,7 @@ import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.Sch
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.tmap.WalkingRoute;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrix;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -173,12 +173,9 @@ public class ScheduleService {
     }
 
     @Transactional
-    public ScheduleResponse update(Long memberId, Long scheduleId, ScheduleUpdateRequest request) {
+    public ScheduleResponse update(Long memberId, Long scheduleId, ScheduleCreateRequest request) {
         Schedule schedule = findOwnedSchedule(memberId, scheduleId);
         SchedulePreview preview = scheduleMatrixCache.getPreview(request.matrixToken(), memberId);
-        if (preview.departureArea() != request.departureArea()) {
-            throw new GeneralException(ScheduleErrorCode.PREVIEW_DEPARTURE_MISMATCH);
-        }
         validateOrder(preview.placeIds(), request.orderedPlaceIds());
 
         List<Place> places = findBookmarkedPlaces(memberId, request.orderedPlaceIds());
