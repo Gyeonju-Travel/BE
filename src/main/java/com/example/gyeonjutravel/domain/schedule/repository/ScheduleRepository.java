@@ -7,8 +7,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
+
+    Optional<Schedule> findByIdAndMemberId(Long id, Long memberId);
 
     @Query("select distinct schedule from Schedule schedule "
             + "left join fetch schedule.items item "

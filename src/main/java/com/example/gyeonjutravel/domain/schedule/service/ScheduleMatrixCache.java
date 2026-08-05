@@ -91,6 +91,23 @@ public class ScheduleMatrixCache {
         return new MatrixPreview(token, cachedMatrix.matrix(), previewExpiresAt);
     }
 
+    public MatrixPreview createPreviewFromMatrix(
+            Long memberId,
+            LocalDate date,
+            DepartureArea departureArea,
+            List<Long> placeIds,
+            WalkingMatrix matrix
+    ) {
+        Instant now = clock.instant();
+        String token = UUID.randomUUID().toString();
+        Instant expiresAt = now.plus(previewTtl);
+        previews.put(token, new SchedulePreview(
+                memberId, date, departureArea, List.copyOf(placeIds), matrix, expiresAt
+        ));
+        removeExpired(now);
+        return new MatrixPreview(token, matrix, expiresAt);
+    }
+
     public SchedulePreview getPreview(String token, Long memberId) {
         SchedulePreview preview = previews.get(token);
         if (preview == null || !preview.memberId().equals(memberId)
