@@ -1,7 +1,9 @@
 steps:
-  # 1. Spring Boot 프로젝트 빌드 (JAR 생성)
-  - name: 'gradle:8-jdk21'
+  # 1. Gradle 빌드 속도 향상을 위한 캐시 설정 (선택 사항)
+  - name: 'gcr.io/cloud-builders/gradle'
     args: ['gradle', 'clean', 'bootJar']
+    env:
+      - 'GRADLE_USER_HOME=/build/.gradle'
 
   # 2. Docker 이미지 빌드
   - name: 'gcr.io/cloud-builders/docker'
@@ -31,9 +33,13 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-      # Secret Manager 연결
+      # Secret Manager에 저장된 보안 민감 데이터
       - '--set-secrets'
-      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest'
+      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest,TMAP_APP_KEY=TMAP_APP_KEY:latest'
+
+      # 일반 환경변수 (기본값 변경이 필요할 경우 여기에 추가)
+      - '--set-env-vars'
+      - 'STORAGE_PROVIDER=s3,AWS_S3_BUCKET=gyenoud,AWS_REGION=ap-northeast-2'
 
 options:
   logging: CLOUD_LOGGING_ONLY

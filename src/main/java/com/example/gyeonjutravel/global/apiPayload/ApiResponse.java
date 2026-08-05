@@ -1,6 +1,6 @@
 package com.example.gyeonjutravel.global.apiPayload;
 
-import com.example.gyeonjutravel.global.apiPayload.response.SuccessCode;
+import com.example.gyeonjutravel.global.apiPayload.response.code.SuccessCode;
 
 public record ApiResponse<T>(
         Boolean isSuccess,

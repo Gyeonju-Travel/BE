@@ -1,6 +1,6 @@
 package com.example.gyeonjutravel.global.security;
 
-import com.example.gyeonjutravel.global.apiPayload.response.ErrorCode;
+import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
 import com.example.gyeonjutravel.global.apiPayload.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;

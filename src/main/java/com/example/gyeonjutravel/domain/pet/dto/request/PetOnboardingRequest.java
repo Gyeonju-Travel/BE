@@ -1,8 +1,8 @@
 package com.example.gyeonjutravel.domain.pet.dto.request;
 
 import com.example.gyeonjutravel.domain.pet.entity.enums.DogSize;
+import com.example.gyeonjutravel.domain.pet.entity.enums.PetPersonality;
 import com.example.gyeonjutravel.domain.pet.entity.enums.TravelPreference;
-import com.example.gyeonjutravel.domain.pet.entity.enums.WalkingStyle;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -18,7 +18,7 @@ public record PetOnboardingRequest(
         @NotNull(message = "여행 취향은 필수입니다.")
         TravelPreference travelPreference,
 
-        @NotNull(message = "산책 스타일은 필수입니다.")
-        WalkingStyle walkingStyle
+        @NotNull(message = "강아지 성향은 필수입니다.")
+        PetPersonality personality
 ) {
 }
