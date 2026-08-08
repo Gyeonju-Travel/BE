@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.util.List;
+
 public record PetOnboardingRequest(
         @NotBlank(message = "강아지 이름은 필수입니다.")
         @Size(max = 30, message = "강아지 이름은 30자 이하여야 합니다.")
@@ -19,6 +21,7 @@ public record PetOnboardingRequest(
         TravelPreference travelPreference,
 
         @NotNull(message = "강아지 성향은 필수입니다.")
-        PetPersonality personality
+        @Size(min = 2, max = 2)
+        List<@NotNull PetPersonality> personality
 ) {
 }
