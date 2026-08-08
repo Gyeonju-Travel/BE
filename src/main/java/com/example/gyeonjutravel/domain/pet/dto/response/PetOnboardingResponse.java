@@ -5,13 +5,15 @@ import com.example.gyeonjutravel.domain.pet.entity.enums.DogSize;
 import com.example.gyeonjutravel.domain.pet.entity.enums.PetPersonality;
 import com.example.gyeonjutravel.domain.pet.entity.enums.TravelPreference;
 
+import java.util.List;
+
 public record PetOnboardingResponse(
         Long petId,
         String name,
         String profileImageUrl,
         DogSize size,
         TravelPreference travelPreference,
-        PetPersonality personality
+        List<PetPersonality> personality
 ) {
 
     public static PetOnboardingResponse from(Pet pet) {
@@ -21,7 +23,7 @@ public record PetOnboardingResponse(
                 pet.getProfileImageUrl(),
                 pet.getSize(),
                 pet.getTravelPreference(),
-                pet.getPersonality()
+                List.of(pet.getPersonality(), pet.getSecondPersonality())
         );
     }
 }
