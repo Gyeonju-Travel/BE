@@ -53,6 +53,10 @@ public class Pet extends BaseEntity {
     @Column(length = 20)
     private PetPersonality personality;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private PetPersonality secondPersonality;
+
     @Column(nullable = false)
     private boolean representative;
 
@@ -74,6 +78,7 @@ public class Pet extends BaseEntity {
             Integer age,
             PetGender gender,
             PetPersonality personality,
+            PetPersonality secondPersonality,
             boolean representative,
             TravelPreference travelPreference
     ) {
@@ -85,6 +90,7 @@ public class Pet extends BaseEntity {
         this.age = age;
         this.gender = gender;
         this.personality = personality;
+        this.secondPersonality = secondPersonality;
         this.representative = representative;
         this.travelPreference = travelPreference;
     }

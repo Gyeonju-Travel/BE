@@ -49,7 +49,8 @@ public class PetService {
                 .size(request.size())
                 .representative(true)
                 .travelPreference(request.travelPreference())
-                .personality(request.personality())
+                .personality(request.personality().get(0))
+                .secondPersonality(request.personality().get(1))
                 .build());
         return PetOnboardingResponse.from(pet);
     }
