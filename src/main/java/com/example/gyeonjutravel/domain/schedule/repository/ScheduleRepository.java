@@ -2,6 +2,7 @@ package com.example.gyeonjutravel.domain.schedule.repository;
 
 import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -29,4 +30,17 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("memberId") Long memberId,
             @Param("scheduleIds") List<Long> scheduleIds
     );
+
+    @Modifying
+    @Query(value = """
+            delete from schedule_items
+            where schedule_id in (
+                select id from schedules where member_id = :memberId
+            )
+            """, nativeQuery = true)
+    void deleteItemsByMemberId(@Param("memberId") Long memberId);
+
+    @Modifying
+    @Query(value = "delete from schedules where member_id = :memberId", nativeQuery = true)
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }
