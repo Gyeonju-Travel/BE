@@ -59,3 +59,8 @@ app:
 tmap:
   base-url: ${TMAP_BASE_URL:https://apis.openapi.sk.com}
   app-key: ${TMAP_APP_KEY:}
+
+openai:
+  base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+  api-key: ${OPENAI_API_KEY:}
+  model: ${OPENAI_MODEL:gpt-4.1-mini}
