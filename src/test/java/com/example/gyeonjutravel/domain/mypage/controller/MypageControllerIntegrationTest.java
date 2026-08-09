@@ -53,6 +53,8 @@ class MypageControllerIntegrationTest {
 
     @BeforeEach
     void signUp() throws Exception {
+        String termsAgreementToken = createTermsAgreementToken();
+
         MvcResult result = mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -63,15 +65,35 @@ class MypageControllerIntegrationTest {
                                   "name": "경주",
                                   "birthDate": "1995-04-12",
                                   "gender": "FEMALE",
-                                  "phoneNumber": "010-1234-5678"
+                                  "phoneNumber": "010-1234-5678",
+                                  "termsAgreementToken": "%s"
                                 }
-                                """))
+                                """.formatted(termsAgreementToken)))
                 .andExpect(status().isOk())
                 .andReturn();
 
         accessToken = objectMapper.readTree(result.getResponse().getContentAsString())
                 .path("result")
                 .path("accessToken")
+                .asText();
+    }
+
+    private String createTermsAgreementToken() throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/terms/signup/agreement")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "termsOfServiceAgreed": true,
+                                  "privacyPolicyAgreed": true,
+                                  "locationServiceAgreed": true,
+                                  "ageOverFourteenAgreed": true
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("result")
+                .path("agreementToken")
                 .asText();
     }
 
