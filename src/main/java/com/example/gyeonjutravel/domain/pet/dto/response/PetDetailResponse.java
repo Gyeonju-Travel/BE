@@ -5,6 +5,8 @@ import com.example.gyeonjutravel.domain.pet.entity.enums.DogSize;
 import com.example.gyeonjutravel.domain.pet.entity.enums.PetGender;
 import com.example.gyeonjutravel.domain.pet.entity.enums.PetPersonality;
 
+import java.util.List;
+
 public record PetDetailResponse(
         Long petId,
         String name,
@@ -13,7 +15,7 @@ public record PetDetailResponse(
         DogSize size,
         Integer age,
         PetGender gender,
-        PetPersonality personality
+        List<PetPersonality> personality
 ) {
 
     public static PetDetailResponse from(Pet pet) {
@@ -25,7 +27,7 @@ public record PetDetailResponse(
                 pet.getSize(),
                 pet.getAge(),
                 pet.getGender(),
-                pet.getPersonality()
+                List.of(pet.getPersonality(), pet.getSecondPersonality())
         );
     }
 }

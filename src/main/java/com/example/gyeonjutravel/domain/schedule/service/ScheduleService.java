@@ -173,6 +173,31 @@ public class ScheduleService {
     }
 
     @Transactional
+    public ScheduleResponse createRecommended(Long memberId, ScheduleCreateRequest request) {
+        SchedulePreview preview = scheduleMatrixCache.getPreview(request.matrixToken(), memberId);
+        validateOrder(preview.placeIds(), request.orderedPlaceIds());
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
+        List<Place> places = placeRepository.findAllById(request.orderedPlaceIds());
+        if (places.size() != request.orderedPlaceIds().size()) {
+            throw new GeneralException(ScheduleErrorCode.INVALID_PLACE_SELECTION);
+        }
+        Map<Long, Place> placesById = indexPlaces(places);
+
+        Schedule schedule = new Schedule(member, preview.date(), preview.departureArea());
+        List<SchedulePlaceResponse> savedPlaces = addItems(schedule, request.orderedPlaceIds(), placesById, preview);
+        Schedule savedSchedule = scheduleRepository.save(schedule);
+        scheduleMatrixCache.consumePreview(request.matrixToken());
+        return new ScheduleResponse(
+                savedSchedule.getId(),
+                savedSchedule.getTravelDate(),
+                DepartureResponse.from(savedSchedule.getDepartureArea()),
+                savedPlaces
+        );
+    }
+
+    @Transactional
     public ScheduleResponse update(Long memberId, Long scheduleId, ScheduleCreateRequest request) {
         Schedule schedule = findOwnedSchedule(memberId, scheduleId);
         SchedulePreview preview = scheduleMatrixCache.getPreview(request.matrixToken(), memberId);
