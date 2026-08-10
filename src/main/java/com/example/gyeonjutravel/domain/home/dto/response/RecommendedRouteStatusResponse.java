@@ -1,12 +1,13 @@
 package com.example.gyeonjutravel.domain.home.dto.response;
 
 import com.example.gyeonjutravel.domain.home.enums.RecommendedRouteStatus;
-import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
+import com.example.gyeonjutravel.domain.home.enums.RecommendedRouteStep;
 
 public record RecommendedRouteStatusResponse(
-        String recommendationId,
+        Long recommendationId,
         RecommendedRouteStatus status,
-        SchedulePreviewResponse result,
+        RecommendedRouteStep step,
+        String message,
         String errorMessage
 ) {
 }

@@ -7,14 +7,17 @@ import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
 import com.example.gyeonjutravel.domain.home.dto.request.RecommendedRouteRequest;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteJobResponse;
+import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRoutePlaceResponse;
+import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteResultResponse;
 import com.example.gyeonjutravel.domain.home.enums.RecommendedRouteStatus;
+import com.example.gyeonjutravel.domain.home.enums.RecommendedRouteStep;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteStatusResponse;
 import com.example.gyeonjutravel.domain.home.exception.RecommendedRouteErrorCode;
+import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.DepartureResponse;
-import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePlaceResponse;
-import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
-import com.example.gyeonjutravel.domain.schedule.dto.response.WalkingRouteResponse;
+import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
 import com.example.gyeonjutravel.domain.schedule.exception.ScheduleErrorCode;
+import com.example.gyeonjutravel.domain.schedule.service.ScheduleService;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.MatrixPreview;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.PlaceCoordinate;
@@ -32,11 +35,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -46,39 +49,76 @@ public class RecommendedRouteService {
     private final PlaceRepository placeRepository;
     private final PetRepository petRepository;
     private final ScheduleMatrixCache scheduleMatrixCache;
+    private final ScheduleService scheduleService;
     private final RecommendedPlaceSelector recommendedPlaceSelector;
-    private final Map<String, RecommendedRouteJob> jobs = new ConcurrentHashMap<>();
+    private final Map<Long, RecommendedRouteJob> jobs = new ConcurrentHashMap<>();
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private final AtomicLong recommendationIdGenerator = new AtomicLong(1);
 
     public RecommendedRouteJobResponse create(Long memberId, RecommendedRouteRequest request) {
-        String recommendationId = UUID.randomUUID().toString();
-        jobs.put(recommendationId, RecommendedRouteJob.creating(memberId));
+        Long recommendationId = recommendationIdGenerator.getAndIncrement();
+        jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.DEPARTURE_ANALYZING));
         CompletableFuture.runAsync(() -> completeJob(memberId, recommendationId, request), executorService);
         return new RecommendedRouteJobResponse(recommendationId, RecommendedRouteStatus.CREATING);
     }
 
-    public RecommendedRouteStatusResponse getStatus(Long memberId, String jobId) {
+    public RecommendedRouteStatusResponse getStatus(Long memberId, Long recommendationId) {
+        RecommendedRouteJob job = findJob(memberId, recommendationId);
+        return new RecommendedRouteStatusResponse(
+                recommendationId,
+                job.status(),
+                job.step(),
+                job.step().getMessage(),
+                job.errorMessage()
+        );
+    }
+
+    public RecommendedRouteResultResponse getResult(Long memberId, Long recommendationId) {
+        RecommendedRouteJob job = findJob(memberId, recommendationId);
+        if (job.status() != RecommendedRouteStatus.COMPLETED || job.result() == null) {
+            throw new GeneralException(RecommendedRouteErrorCode.JOB_NOT_FOUND);
+        }
+        return job.result().toResponse(recommendationId);
+    }
+
+    @Transactional
+    public ScheduleResponse createSchedule(Long memberId, Long recommendationId) {
+        RecommendedRouteJob job = findJob(memberId, recommendationId);
+        if (job.status() != RecommendedRouteStatus.COMPLETED || job.result() == null) {
+            throw new GeneralException(RecommendedRouteErrorCode.JOB_NOT_FOUND);
+        }
+        RecommendedRouteResult result = job.result();
+        return scheduleService.createRecommended(
+                memberId,
+                new ScheduleCreateRequest(result.matrixToken(), result.placeIds())
+        );
+    }
+
+    private RecommendedRouteJob findJob(Long memberId, Long jobId) {
         RecommendedRouteJob job = jobs.get(jobId);
         if (job == null || !job.memberId().equals(memberId)) {
             throw new GeneralException(RecommendedRouteErrorCode.JOB_NOT_FOUND);
         }
-        return new RecommendedRouteStatusResponse(jobId, job.status(), job.result(), job.errorMessage());
+        return job;
     }
 
-    private void completeJob(Long memberId, String jobId, RecommendedRouteRequest request) {
+    private void completeJob(Long memberId, Long jobId, RecommendedRouteRequest request) {
         try {
-            jobs.put(jobId, RecommendedRouteJob.completed(memberId, createPreview(memberId, request)));
+            jobs.put(jobId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.COURSE_SEARCHING));
+            RecommendedRouteResult result = createPreview(memberId, jobId, request);
+            jobs.put(jobId, RecommendedRouteJob.completed(memberId, result));
         } catch (Exception exception) {
             jobs.put(jobId, RecommendedRouteJob.failed(memberId, exception.getMessage()));
         }
     }
 
-    private SchedulePreviewResponse createPreview(Long memberId, RecommendedRouteRequest request) {
+    private RecommendedRouteResult createPreview(Long memberId, Long recommendationId, RecommendedRouteRequest request) {
         Pet representativePet = petRepository.findFirstByMemberIdAndRepresentativeTrue(memberId)
                 .orElseThrow(() -> new GeneralException(RecommendedRouteErrorCode.REPRESENTATIVE_PET_NOT_FOUND));
         List<Place> dataset = placeRepository.findAll();
         validateDataset(dataset);
 
+        jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.CONDITION_CHECKING));
         List<Long> recommendedPlaceIds = recommendedPlaceSelector.select(
                 request.departureArea(),
                 request.date(),
@@ -89,6 +129,7 @@ public class RecommendedRouteService {
         List<Place> recommendedPlaces = findRecommendedPlaces(dataset, recommendedPlaceIds);
         validateRecommendedPlaces(recommendedPlaces);
 
+        jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.ROUTE_COMPLETED));
         MatrixPreview matrixPreview = scheduleMatrixCache.createPreview(
                 memberId,
                 request.date(),
@@ -102,7 +143,7 @@ public class RecommendedRouteService {
                         .toList()
         );
 
-        return toResponse(request, recommendedPlaces, matrixPreview);
+        return toResult(request, recommendedPlaces, matrixPreview);
     }
 
     private void validateDataset(List<Place> places) {
@@ -149,13 +190,13 @@ public class RecommendedRouteService {
         }
     }
 
-    private SchedulePreviewResponse toResponse(
+    private RecommendedRouteResult toResult(
             RecommendedRouteRequest request,
             List<Place> recommendedPlaces,
             MatrixPreview matrixPreview
     ) {
-        List<SchedulePlaceResponse> places = new ArrayList<>();
-        Set<RouteKey> selectedRouteKeys = new HashSet<>();
+        List<RecommendedRoutePlaceResponse> places = new ArrayList<>();
+        List<Long> placeIds = new ArrayList<>();
         String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
 
         for (int index = 0; index < recommendedPlaces.size(); index++) {
@@ -165,29 +206,22 @@ public class RecommendedRouteService {
                     .findRoute(previousNodeKey, placeNodeKey)
                     .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
 
-            places.add(SchedulePlaceResponse.preview(
+            places.add(RecommendedRoutePlaceResponse.of(
                     index + 1,
                     place,
                     route.durationSeconds(),
                     route.distanceMeters()
             ));
-            selectedRouteKeys.add(new RouteKey(previousNodeKey, placeNodeKey));
+            placeIds.add(place.getId());
             previousNodeKey = placeNodeKey;
         }
 
-        return new SchedulePreviewResponse(
+        return new RecommendedRouteResult(
                 matrixPreview.token(),
-                matrixPreview.expiresAt(),
                 request.date(),
                 DepartureResponse.from(request.departureArea()),
-                places,
-                matrixPreview.matrix().routes().stream()
-                        .filter(route -> !selectedRouteKeys.contains(new RouteKey(
-                                route.fromNodeKey(),
-                                route.toNodeKey()
-                        )))
-                        .map(WalkingRouteResponse::from)
-                        .toList()
+                placeIds,
+                places
         );
     }
 
@@ -199,22 +233,44 @@ public class RecommendedRouteService {
     private record RecommendedRouteJob(
             Long memberId,
             RecommendedRouteStatus status,
-            SchedulePreviewResponse result,
+            RecommendedRouteStep step,
+            RecommendedRouteResult result,
             String errorMessage
     ) {
-        static RecommendedRouteJob creating(Long memberId) {
-            return new RecommendedRouteJob(memberId, RecommendedRouteStatus.CREATING, null, null);
+        static RecommendedRouteJob creating(Long memberId, RecommendedRouteStep step) {
+            return new RecommendedRouteJob(memberId, RecommendedRouteStatus.CREATING, step, null, null);
         }
 
-        static RecommendedRouteJob completed(Long memberId, SchedulePreviewResponse result) {
-            return new RecommendedRouteJob(memberId, RecommendedRouteStatus.COMPLETED, result, null);
+        static RecommendedRouteJob completed(Long memberId, RecommendedRouteResult result) {
+            return new RecommendedRouteJob(
+                    memberId,
+                    RecommendedRouteStatus.COMPLETED,
+                    RecommendedRouteStep.ROUTE_COMPLETED,
+                    result,
+                    null
+            );
         }
 
         static RecommendedRouteJob failed(Long memberId, String errorMessage) {
-            return new RecommendedRouteJob(memberId, RecommendedRouteStatus.FAILED, null, errorMessage);
+            return new RecommendedRouteJob(
+                    memberId,
+                    RecommendedRouteStatus.FAILED,
+                    RecommendedRouteStep.ROUTE_COMPLETED,
+                    null,
+                    errorMessage
+            );
         }
     }
 
-    private record RouteKey(String fromNodeKey, String toNodeKey) {
+    private record RecommendedRouteResult(
+            String matrixToken,
+            java.time.LocalDate date,
+            DepartureResponse departure,
+            List<Long> placeIds,
+            List<RecommendedRoutePlaceResponse> places
+    ) {
+        RecommendedRouteResultResponse toResponse(Long recommendationId) {
+            return new RecommendedRouteResultResponse(recommendationId, date, departure, places);
+        }
     }
 }
