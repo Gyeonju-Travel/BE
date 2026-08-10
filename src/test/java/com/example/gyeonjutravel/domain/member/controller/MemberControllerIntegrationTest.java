@@ -1,7 +1,9 @@
 package com.example.gyeonjutravel.domain.member.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.member.service.PasswordResetMailService;
+import com.example.gyeonjutravel.domain.terms.repository.MemberTermsAgreementRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +40,19 @@ class MemberControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private MemberRepository memberRepository;
+
+    @Autowired
+    private MemberTermsAgreementRepository memberTermsAgreementRepository;
+
     @MockitoBean
     private PasswordResetMailService passwordResetMailService;
 
     @Test
     void memberCanSignUpAndResetPasswordWithEmailVerificationCode() throws Exception {
         String email = "member@example.com";
+        String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
 
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -55,15 +64,24 @@ class MemberControllerIntegrationTest {
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
                                   "gender": "FEMALE",
-                                  "phoneNumber": "010-1234-5678"
+                                  "phoneNumber": "010-1234-5678",
+                                  "termsAgreementToken": "%s"
                                 }
-                                """))
+                                """.formatted(termsAgreementToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.email").value(email))
                 .andExpect(jsonPath("$.result.name").value("김견주"))
                 .andExpect(jsonPath("$.result.birthDate").value("1995-04-12"))
                 .andExpect(jsonPath("$.result.gender").value("FEMALE"))
                 .andExpect(jsonPath("$.result.onboardingCompleted").value(false));
+
+        var savedMember = memberRepository.findByEmail(email).orElseThrow();
+        var termsAgreement = memberTermsAgreementRepository.findByMemberId(savedMember.getId()).orElseThrow();
+        assertThat(termsAgreement.isTermsOfServiceAgreed()).isTrue();
+        assertThat(termsAgreement.isPrivacyPolicyAgreed()).isTrue();
+        assertThat(termsAgreement.isLocationServiceAgreed()).isTrue();
+        assertThat(termsAgreement.isAgeOverFourteenAgreed()).isTrue();
+        assertThat(termsAgreement.getAgreedAt()).isNotNull();
 
         mockMvc.perform(post("/api/auth/password-reset/verification-code")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -119,6 +137,8 @@ class MemberControllerIntegrationTest {
 
     @Test
     void signUpRejectsMismatchedPasswordConfirmation() throws Exception {
+        String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
+
         mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -129,15 +149,38 @@ class MemberControllerIntegrationTest {
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
                                   "gender": "MALE",
-                                  "phoneNumber": "010-1234-5678"
+                                  "phoneNumber": "010-1234-5678",
+                                  "termsAgreementToken": "%s"
                                 }
-                                """))
+                                """.formatted(termsAgreementToken)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("MEMBER_400_1"));
     }
 
     @Test
+    void signUpRejectsMissingRequiredTermsAgreement() throws Exception {
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "terms@example.com",
+                                  "password": "password123!",
+                                  "passwordConfirmation": "password123!",
+                                  "name": "源寃ъ＜",
+                                  "birthDate": "1995-04-12",
+                                  "gender": "FEMALE",
+                                  "phoneNumber": "010-1234-5678",
+                                  "termsAgreementToken": "invalid-token"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("TERMS_400_1"));
+    }
+
+    @Test
     void memberCanCreateRetrieveAndUpdatePet() throws Exception {
+        String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
+
         MvcResult signUpResult = mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -148,9 +191,10 @@ class MemberControllerIntegrationTest {
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
                                   "gender": "FEMALE",
-                                  "phoneNumber": "010-1234-5678"
+                                  "phoneNumber": "010-1234-5678",
+                                  "termsAgreementToken": "%s"
                                 }
-                                """))
+                                """.formatted(termsAgreementToken)))
                 .andExpect(status().isOk())
                 .andReturn();
         String accessToken = objectMapper.readTree(signUpResult.getResponse().getContentAsString())
@@ -164,7 +208,7 @@ class MemberControllerIntegrationTest {
                                   "name": "황남이",
                                   "travelPreference": "PHOTO_SPOT",
                                   "size": "SMALL",
-                                  "personality": "RELAXED"
+                                  "personality": ["RELAXED", "FRIENDLY"]
                                 }
                                 """))
                         .file(imagePart("hwangnam.png"))
@@ -175,7 +219,8 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.profileImageUrl").value(startsWith("/api/pet-images/")))
                 .andExpect(jsonPath("$.result.travelPreference").value("PHOTO_SPOT"))
                 .andExpect(jsonPath("$.result.size").value("SMALL"))
-                .andExpect(jsonPath("$.result.personality").value("RELAXED"))
+                .andExpect(jsonPath("$.result.personality[0]").value("RELAXED"))
+                .andExpect(jsonPath("$.result.personality[1]").value("FRIENDLY"))
                 .andExpect(jsonPath("$.result.breed").doesNotExist())
                 .andExpect(jsonPath("$.result.age").doesNotExist())
                 .andExpect(jsonPath("$.result.gender").doesNotExist())
@@ -189,7 +234,8 @@ class MemberControllerIntegrationTest {
         mockMvc.perform(get("/api/pets/{petId}", petId)
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.personality").value("RELAXED"));
+                .andExpect(jsonPath("$.result.personality[0]").value("RELAXED"))
+                .andExpect(jsonPath("$.result.personality[1]").value("FRIENDLY"));
 
         mockMvc.perform(multipart("/api/pets/{petId}", petId)
                         .file(jsonPart("""
@@ -199,7 +245,7 @@ class MemberControllerIntegrationTest {
                                   "size": "MEDIUM",
                                   "age": 4,
                                   "gender": "MALE",
-                                  "personality": "ACTIVE"
+                                  "personality": ["ACTIVE", "RELAXED"]
                                 }
                                 """))
                         .file(imagePart("hwangnam-new.png"))
@@ -214,7 +260,8 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.size").value("MEDIUM"))
                 .andExpect(jsonPath("$.result.age").value(4))
                 .andExpect(jsonPath("$.result.gender").value("MALE"))
-                .andExpect(jsonPath("$.result.personality").value("ACTIVE"))
+                .andExpect(jsonPath("$.result.personality[0]").value("ACTIVE"))
+                .andExpect(jsonPath("$.result.personality[1]").value("RELAXED"))
                 .andExpect(jsonPath("$.result.travelPreference").doesNotExist())
                 .andExpect(jsonPath("$.result.walkingStyle").doesNotExist());
 
@@ -235,7 +282,7 @@ class MemberControllerIntegrationTest {
                                   "size": "LARGE",
                                   "age": 2,
                                   "gender": "FEMALE",
-                                  "personality": "FRIENDLY"
+                                  "personality": ["FRIENDLY", "ACTIVE"]
                                 }
                                 """))
                         .file(imagePart("cheomseongdae.png"))
@@ -247,7 +294,8 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.size").value("LARGE"))
                 .andExpect(jsonPath("$.result.age").value(2))
                 .andExpect(jsonPath("$.result.gender").value("FEMALE"))
-                .andExpect(jsonPath("$.result.personality").value("FRIENDLY"))
+                .andExpect(jsonPath("$.result.personality[0]").value("FRIENDLY"))
+                .andExpect(jsonPath("$.result.personality[1]").value("ACTIVE"))
                 .andExpect(jsonPath("$.result.travelPreference").doesNotExist())
                 .andExpect(jsonPath("$.result.walkingStyle").doesNotExist())
                 .andReturn();
@@ -293,6 +341,7 @@ class MemberControllerIntegrationTest {
         mockMvc.perform(multipart("/api/pets"))
                 .andExpect(status().isUnauthorized());
 
+        String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
         MvcResult loginResult = mockMvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -303,9 +352,10 @@ class MemberControllerIntegrationTest {
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
                                   "gender": "MALE",
-                                  "phoneNumber": "010-9876-5432"
+                                  "phoneNumber": "010-9876-5432",
+                                  "termsAgreementToken": "%s"
                                 }
-                                """))
+                                """.formatted(termsAgreementToken)))
                 .andReturn();
         String accessToken = objectMapper.readTree(loginResult.getResponse().getContentAsString())
                 .path("result")
@@ -327,6 +377,35 @@ class MemberControllerIntegrationTest {
                 MediaType.APPLICATION_JSON_VALUE,
                 json.getBytes(java.nio.charset.StandardCharsets.UTF_8)
         );
+    }
+
+    private String createTermsAgreementToken(
+            boolean termsOfServiceAgreed,
+            boolean privacyPolicyAgreed,
+            boolean locationServiceAgreed,
+            boolean ageOverFourteenAgreed
+    ) throws Exception {
+        MvcResult result = mockMvc.perform(post("/api/auth/terms/agreement")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "termsOfServiceAgreed": %s,
+                                  "privacyPolicyAgreed": %s,
+                                  "locationServiceAgreed": %s,
+                                  "ageOverFourteenAgreed": %s
+                                }
+                                """.formatted(
+                                termsOfServiceAgreed,
+                                privacyPolicyAgreed,
+                                locationServiceAgreed,
+                                ageOverFourteenAgreed
+                        )))
+                .andExpect(status().isOk())
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString())
+                .path("result")
+                .path("agreementToken")
+                .asText();
     }
 
     private MockMultipartFile imagePart(String filename) {

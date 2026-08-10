@@ -33,7 +33,7 @@ steps:
 
       # Secret Manager 연결
       - '--set-secrets'
-      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest'
+      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest,TMAP_APP_KEY=TMAP_APP_KEY:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY

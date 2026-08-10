@@ -65,7 +65,8 @@ public class PetService {
                 .size(request.size())
                 .age(request.age())
                 .gender(request.gender())
-                .personality(request.personality())
+                .personality(request.personality().get(0))
+                .secondPersonality(request.personality().get(1))
                 .representative(false)
                 .build());
         return PetDetailResponse.from(pet);
@@ -129,7 +130,8 @@ public class PetService {
                 request.size(),
                 request.age(),
                 request.gender(),
-                request.personality()
+                request.personality().get(0),
+                request.personality().get(1)
         );
         return PetDetailResponse.from(pet);
     }

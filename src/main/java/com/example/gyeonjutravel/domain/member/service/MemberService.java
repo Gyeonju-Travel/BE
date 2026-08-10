@@ -19,6 +19,8 @@ import com.example.gyeonjutravel.domain.member.repository.PasswordResetVerificat
 import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.domain.report.repository.PlaceReportRepository;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
+import com.example.gyeonjutravel.domain.terms.repository.MemberTermsAgreementRepository;
+import com.example.gyeonjutravel.domain.terms.service.TermsService;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +49,8 @@ public class MemberService {
     private final PlaceReportRepository placeReportRepository;
     private final ScheduleRepository scheduleRepository;
     private final InquiryRepository inquiryRepository;
+    private final MemberTermsAgreementRepository memberTermsAgreementRepository;
+    private final TermsService termsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordResetMailService passwordResetMailService;
@@ -74,6 +78,8 @@ public class MemberService {
                 .gender(request.gender())
                 .phoneNumber(request.phoneNumber())
                 .build());
+
+        termsService.assignSignUpAgreement(request.termsAgreementToken(), member);
 
         return createSignUpResponse(member);
     }
@@ -180,6 +186,7 @@ public class MemberService {
         placeReportRepository.deleteAllByMemberId(member.getId());
         inquiryRepository.deleteAllByMemberId(member.getId());
         petRepository.deleteAllByMemberId(member.getId());
+        memberTermsAgreementRepository.deleteByMemberId(member.getId());
         memberRepository.delete(member);
         memberRepository.flush();
     }
