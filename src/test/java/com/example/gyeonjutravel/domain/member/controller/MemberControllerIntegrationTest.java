@@ -208,7 +208,7 @@ class MemberControllerIntegrationTest {
                                   "name": "황남이",
                                   "travelPreference": "PHOTO_SPOT",
                                   "size": "SMALL",
-                                  "personality": "RELAXED"
+                                  "personality": ["RELAXED", "FRIENDLY"]
                                 }
                                 """))
                         .file(imagePart("hwangnam.png"))
@@ -219,7 +219,8 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.profileImageUrl").value(startsWith("/api/pet-images/")))
                 .andExpect(jsonPath("$.result.travelPreference").value("PHOTO_SPOT"))
                 .andExpect(jsonPath("$.result.size").value("SMALL"))
-                .andExpect(jsonPath("$.result.personality").value("RELAXED"))
+                .andExpect(jsonPath("$.result.personality[0]").value("RELAXED"))
+                .andExpect(jsonPath("$.result.personality[1]").value("FRIENDLY"))
                 .andExpect(jsonPath("$.result.breed").doesNotExist())
                 .andExpect(jsonPath("$.result.age").doesNotExist())
                 .andExpect(jsonPath("$.result.gender").doesNotExist())
@@ -233,7 +234,8 @@ class MemberControllerIntegrationTest {
         mockMvc.perform(get("/api/pets/{petId}", petId)
                         .header("Authorization", "Bearer " + accessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.result.personality").value("RELAXED"));
+                .andExpect(jsonPath("$.result.personality[0]").value("RELAXED"))
+                .andExpect(jsonPath("$.result.personality[1]").value("FRIENDLY"));
 
         mockMvc.perform(multipart("/api/pets/{petId}", petId)
                         .file(jsonPart("""
@@ -243,7 +245,7 @@ class MemberControllerIntegrationTest {
                                   "size": "MEDIUM",
                                   "age": 4,
                                   "gender": "MALE",
-                                  "personality": "ACTIVE"
+                                  "personality": ["ACTIVE", "RELAXED"]
                                 }
                                 """))
                         .file(imagePart("hwangnam-new.png"))
@@ -258,7 +260,8 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.size").value("MEDIUM"))
                 .andExpect(jsonPath("$.result.age").value(4))
                 .andExpect(jsonPath("$.result.gender").value("MALE"))
-                .andExpect(jsonPath("$.result.personality").value("ACTIVE"))
+                .andExpect(jsonPath("$.result.personality[0]").value("ACTIVE"))
+                .andExpect(jsonPath("$.result.personality[1]").value("RELAXED"))
                 .andExpect(jsonPath("$.result.travelPreference").doesNotExist())
                 .andExpect(jsonPath("$.result.walkingStyle").doesNotExist());
 
@@ -279,7 +282,7 @@ class MemberControllerIntegrationTest {
                                   "size": "LARGE",
                                   "age": 2,
                                   "gender": "FEMALE",
-                                  "personality": "FRIENDLY"
+                                  "personality": ["FRIENDLY", "ACTIVE"]
                                 }
                                 """))
                         .file(imagePart("cheomseongdae.png"))
@@ -291,7 +294,8 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.size").value("LARGE"))
                 .andExpect(jsonPath("$.result.age").value(2))
                 .andExpect(jsonPath("$.result.gender").value("FEMALE"))
-                .andExpect(jsonPath("$.result.personality").value("FRIENDLY"))
+                .andExpect(jsonPath("$.result.personality[0]").value("FRIENDLY"))
+                .andExpect(jsonPath("$.result.personality[1]").value("ACTIVE"))
                 .andExpect(jsonPath("$.result.travelPreference").doesNotExist())
                 .andExpect(jsonPath("$.result.walkingStyle").doesNotExist())
                 .andReturn();
@@ -381,7 +385,7 @@ class MemberControllerIntegrationTest {
             boolean locationServiceAgreed,
             boolean ageOverFourteenAgreed
     ) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/terms/signup/agreement")
+        MvcResult result = mockMvc.perform(post("/api/auth/terms/agreement")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

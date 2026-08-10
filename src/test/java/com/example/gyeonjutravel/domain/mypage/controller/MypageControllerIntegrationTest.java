@@ -79,7 +79,7 @@ class MypageControllerIntegrationTest {
     }
 
     private String createTermsAgreementToken() throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/terms/signup/agreement")
+        MvcResult result = mockMvc.perform(post("/api/auth/terms/agreement")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
