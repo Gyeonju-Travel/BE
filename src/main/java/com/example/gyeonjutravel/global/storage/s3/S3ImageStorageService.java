@@ -1,7 +1,9 @@
-package com.example.gyeonjutravel.global.storage;
+package com.example.gyeonjutravel.global.storage.s3;
 
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
+import com.example.gyeonjutravel.global.storage.ImageFileValidator;
+import com.example.gyeonjutravel.global.storage.ImageStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

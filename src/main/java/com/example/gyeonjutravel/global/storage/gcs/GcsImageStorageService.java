@@ -1,7 +1,9 @@
-package com.example.gyeonjutravel.global.storage;
+package com.example.gyeonjutravel.global.storage.gcs;
 
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
+import com.example.gyeonjutravel.global.storage.ImageFileValidator;
+import com.example.gyeonjutravel.global.storage.ImageStorageService;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import lombok.RequiredArgsConstructor;
