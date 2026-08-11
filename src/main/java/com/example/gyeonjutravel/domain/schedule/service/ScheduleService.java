@@ -14,6 +14,7 @@ import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDetailResp
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePlaceResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
+import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleStartResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.WalkingRouteResponse;
 import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
 import com.example.gyeonjutravel.domain.schedule.exception.ScheduleErrorCode;
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -124,6 +126,13 @@ public class ScheduleService {
                 .map(ScheduleDetailResponse::from)
                 .toList();
         return ScheduleDateResponse.of(date, schedules);
+    }
+
+    @Transactional
+    public ScheduleStartResponse start(Long memberId, Long scheduleId) {
+        Schedule schedule = findOwnedSchedule(memberId, scheduleId);
+        schedule.start(LocalDateTime.now());
+        return ScheduleStartResponse.from(schedule);
     }
 
     @Transactional

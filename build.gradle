@@ -41,6 +41,9 @@ dependencies {
     implementation 'software.amazon.awssdk:s3'
     implementation 'software.amazon.awssdk:url-connection-client'
 
+    // Google Cloud Storage
+    implementation 'com.google.cloud:google-cloud-storage:2.43.1'
+
     // GMAIL
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-web'

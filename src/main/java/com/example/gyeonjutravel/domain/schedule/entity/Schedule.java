@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,6 +47,12 @@ public class Schedule extends BaseEntity {
     @Column(name = "departure_area", nullable = false, length = 30)
     private DepartureArea departureArea;
 
+    @Column(name = "started", nullable = false)
+    private boolean started = false;
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
     @OneToMany(mappedBy = "schedule", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("visitOrder ASC")
     private List<ScheduleItem> items = new ArrayList<>();
@@ -63,6 +70,14 @@ public class Schedule extends BaseEntity {
     public void updateRoute(DepartureArea departureArea) {
         this.departureArea = departureArea;
         this.items.clear();
+    }
+
+    public void start(LocalDateTime startedAt) {
+        if (this.started) {
+            return;
+        }
+        this.started = true;
+        this.startedAt = startedAt;
     }
 
     public void addItem(
