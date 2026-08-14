@@ -14,6 +14,7 @@ import com.example.gyeonjutravel.domain.stamp.dto.response.PlaceVisitResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.StampAlbumResponse;
 import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
 import com.example.gyeonjutravel.domain.stamp.entity.StampAlbum;
+import com.example.gyeonjutravel.domain.stamp.entity.StampType;
 import com.example.gyeonjutravel.domain.stamp.exception.StampErrorCode;
 import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
 import com.example.gyeonjutravel.domain.stamp.repository.StampAlbumRepository;
@@ -90,6 +91,8 @@ public class StampService {
 
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(ScheduleErrorCode.INVALID_PLACE_SELECTION));
+        StampType stampType = StampType.fromPlace(place)
+                .orElseThrow(() -> new GeneralException(StampErrorCode.UNSUPPORTED_STAMP_PLACE));
         long distanceMeters = Math.round(haversineMeters(
                 request.longitude(),
                 request.latitude(),
@@ -107,8 +110,7 @@ public class StampService {
                         place,
                         LocalDateTime.now()
                 )));
-        int stampCount = 1 + (int) placeVisitRepository.countDistinctByMemberIdAndScheduleId(memberId, schedule.getId());
-        return PlaceVisitResponse.of(visit, distanceMeters, stampCount);
+        return PlaceVisitResponse.of(visit, distanceMeters, stampType);
     }
 
     private StampAlbum findOrCreateAlbum(Long memberId, Schedule schedule) {

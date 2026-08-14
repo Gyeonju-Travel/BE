@@ -10,13 +10,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,14 +26,14 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/schedules/{scheduleId}/stamp-album")
-@Tag(name = "스탬프 앨범", description = "일정 종료 후 사진 2장과 대표 반려견 발자국 지도를 조회/저장하는 API")
+@Tag(name = "스탬프 앨범", description = "일정의 사진, 발자국, 획득 스탬프를 조회/저장하는 API")
 public class StampController {
 
     private final StampService stampService;
 
     @Operation(
             summary = "스탬프 앨범 조회",
-            description = "선택한 일정의 대표 반려견 발자국 개수, 누적 거리, 사진 2장, 방문 관광지와 스탬프 개수를 조회합니다."
+            description = "선택한 일정의 대표 반려견 발자국 개수, 누적 거리, 사진 2장, 방문 관광지와 획득 스탬프 이름을 조회합니다."
     )
     @GetMapping
     public ApiResponse<StampAlbumResponse> getAlbum(
@@ -59,7 +60,7 @@ public class StampController {
             summary = "스탬프 앨범 사진 저장",
             description = "일정 종료 화면에서 선택한 사진 2장을 저장하고, 저장된 사진 URL과 발자국 정보를 함께 반환합니다."
     )
-    @PostMapping("/photos")
+    @PostMapping(value = "/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<StampAlbumResponse> savePhotos(
             @PathVariable Long scheduleId,
             @RequestPart("photos") List<MultipartFile> photos,
