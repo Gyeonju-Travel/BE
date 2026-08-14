@@ -70,6 +70,10 @@ public class StampController {
         return ApiResponse.ok(stampService.savePhotos(userDetails.member().getId(), scheduleId, photos));
     }
 
+    @Operation(
+            summary = "스탬프 앨범",
+            description = "사용자가 얻은 스탬프 목록을 조회합니다."
+    )
     @GetMapping("/api/my-page/stamps")
     public ApiResponse<MyPageStampsResponse> getMyPageStamps(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
@@ -77,6 +81,10 @@ public class StampController {
         return ApiResponse.ok(stampService.getMyPageStamps(userDetails.member().getId()));
     }
 
+    @Operation(
+            summary = "여행 기록",
+            description = "일정을 종류한 후 스크랩 앨범을 마무리하면 여행 기록에 반영됩니다."
+    )
     @GetMapping("/api/my-page/travel-records")
     public ApiResponse<TravelRecordsResponse> getTravelRecords(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails

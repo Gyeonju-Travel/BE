@@ -199,6 +199,7 @@ public class StampService {
 
     private Set<String> earnedStampNames(Long memberId) {
         Set<String> stampNames = new LinkedHashSet<>();
+        stampNames.add(StampType.WELCOME_DOG.getDisplayName());
         Map<Long, StampAlbum> albumsByScheduleId = albumsByScheduleId(memberId);
         if (!completedSchedules(memberId, albumsByScheduleId).isEmpty()) {
             stampNames.add(StampType.PERFECT_TRIP.getDisplayName());
