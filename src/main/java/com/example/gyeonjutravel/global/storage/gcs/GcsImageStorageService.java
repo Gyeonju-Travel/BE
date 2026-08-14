@@ -7,6 +7,7 @@ import com.example.gyeonjutravel.global.storage.ImageStorageService;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @ConditionalOnProperty(name = "app.storage.provider", havingValue = "gcs")
 public class GcsImageStorageService implements ImageStorageService {
 
@@ -47,6 +49,7 @@ public class GcsImageStorageService implements ImageStorageService {
             storage.create(blobInfo, image.getBytes());
             return publicBaseUrl + "/" + bucket + "/" + encodePath(objectName);
         } catch (IOException | RuntimeException exception) {
+            log.error("GCS에 이미지 업로드를 실패했습니다. bucket={}, objectName={}", bucket, objectName, exception);
             throw new GeneralException(ErrorCode.IMAGE_UPLOAD_FAILED);
         }
     }
