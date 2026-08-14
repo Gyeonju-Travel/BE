@@ -26,7 +26,7 @@ public class PlaceVisitController {
     private final StampService stampService;
 
     @Operation(
-            summary = "관광지 방문 저장",
+            summary = "관광지 방문 체크",
             description = "현재 좌표와 관광지 좌표의 거리가 40m 이내이면 방문으로 인정합니다. 스탬프 개수는 웰컴 1개와 일정 내 distinct 방문 관광지 수로 계산합니다."
     )
     @PostMapping

@@ -8,19 +8,13 @@ import java.time.LocalDateTime;
 public record PlaceVisitResponse(
         Long visitId,
         Long scheduleId,
-        Long placeId,
-        String placeName,
-        long distanceMeters,
         String stampName,
         LocalDateTime visitedAt
 ) {
-    public static PlaceVisitResponse of(PlaceVisit visit, long distanceMeters, StampType stampType) {
+    public static PlaceVisitResponse of(PlaceVisit visit, StampType stampType) {
         return new PlaceVisitResponse(
                 visit.getId(),
                 visit.getSchedule().getId(),
-                visit.getPlace().getId(),
-                visit.getPlace().getName(),
-                distanceMeters,
                 stampType.getDisplayName(),
                 visit.getVisitedAt()
         );

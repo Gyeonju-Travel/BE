@@ -1,6 +1,7 @@
 package com.example.gyeonjutravel.domain.stamp.controller;
 
 import com.example.gyeonjutravel.domain.stamp.dto.request.FootprintAddRequest;
+import com.example.gyeonjutravel.domain.stamp.dto.response.ScheduleFootprintResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.StampAlbumResponse;
 import com.example.gyeonjutravel.domain.stamp.service.StampService;
 import com.example.gyeonjutravel.global.apiPayload.ApiResponse;
@@ -48,7 +49,7 @@ public class StampController {
             description = "앱이 로컬에서 누적한 증가 이동거리를 일정 앨범에 더합니다. 일정 시작 시각부터 오후 9시까지만 기록할 수 있고, 100m당 발자국 1개로 계산합니다."
     )
     @PostMapping("/footprints")
-    public ApiResponse<StampAlbumResponse> addFootprints(
+    public ApiResponse<ScheduleFootprintResponse> addFootprints(
             @PathVariable Long scheduleId,
             @Valid @RequestBody FootprintAddRequest request,
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails

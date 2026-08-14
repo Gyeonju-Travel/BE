@@ -7,6 +7,7 @@ import com.example.gyeonjutravel.domain.stamp.entity.StampType;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public record StampAlbumResponse(
         Long scheduleId,
@@ -22,16 +23,14 @@ public record StampAlbumResponse(
 ) {
     public static StampAlbumResponse from(StampAlbum album, List<PlaceVisit> visits) {
         List<String> stampNames = new ArrayList<>();
-        stampNames.add(StampType.WELCOME_DOG.getDisplayName());
+        stampNames.add(StampType.PERFECT_TRIP.getDisplayName());
         visits.stream()
                 .map(PlaceVisit::getPlace)
                 .map(StampType::fromPlace)
                 .flatMap(java.util.Optional::stream)
                 .map(StampType::getDisplayName)
                 .forEach(stampNames::add);
-        if (StampType.qualifiesForMaster(stampNames.size())) {
-            stampNames.add(StampType.GYEONGJU_MASTER.getDisplayName());
-        }
+        String selectedStampName = stampNames.get(ThreadLocalRandom.current().nextInt(stampNames.size()));
 
         return new StampAlbumResponse(
                 album.getSchedule().getId(),
@@ -41,7 +40,7 @@ public record StampAlbumResponse(
                 album.getPet().getProfileImageUrl(),
                 album.getFootprintCount(),
                 album.getTotalDistanceMeters(),
-                stampNames,
+                List.of(selectedStampName),
                 album.getPhotos().stream()
                         .map(photo -> photo.getImageUrl())
                         .toList(),

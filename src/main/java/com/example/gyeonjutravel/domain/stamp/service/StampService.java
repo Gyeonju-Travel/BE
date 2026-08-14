@@ -11,6 +11,7 @@ import com.example.gyeonjutravel.domain.stamp.dto.request.FootprintAddRequest;
 import com.example.gyeonjutravel.domain.stamp.dto.request.PlaceVisitCreateRequest;
 import com.example.gyeonjutravel.domain.stamp.dto.response.PetFootprintResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.PlaceVisitResponse;
+import com.example.gyeonjutravel.domain.stamp.dto.response.ScheduleFootprintResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.StampAlbumResponse;
 import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
 import com.example.gyeonjutravel.domain.stamp.entity.StampAlbum;
@@ -46,7 +47,7 @@ public class StampService {
     private final ImageStorageService imageStorageService;
 
     @Transactional
-    public StampAlbumResponse addFootprints(Long memberId, Long scheduleId, FootprintAddRequest request) {
+    public ScheduleFootprintResponse addFootprints(Long memberId, Long scheduleId, FootprintAddRequest request) {
         Schedule schedule = findOwnedSchedule(memberId, scheduleId);
         validateStarted(schedule);
         validateRecordableTime(schedule, LocalDateTime.now());
@@ -54,7 +55,7 @@ public class StampService {
         StampAlbum album = findOrCreateAlbum(memberId, schedule);
         album.addDistance(request.distanceMeters());
         StampAlbum savedAlbum = stampAlbumRepository.save(album);
-        return toAlbumResponse(memberId, savedAlbum);
+        return ScheduleFootprintResponse.from(savedAlbum);
     }
 
     @Transactional
@@ -72,8 +73,11 @@ public class StampService {
     }
 
     public StampAlbumResponse getAlbum(Long memberId, Long scheduleId) {
+        Schedule schedule = findOwnedSchedule(memberId, scheduleId);
+        validateAlbumReadable(schedule, LocalDateTime.now());
+
         StampAlbum album = stampAlbumRepository.findByScheduleIdAndMemberId(scheduleId, memberId)
-                .orElseGet(() -> findOrCreateAlbum(memberId, findOwnedSchedule(memberId, scheduleId)));
+                .orElseGet(() -> findOrCreateAlbum(memberId, schedule));
         return toAlbumResponse(memberId, album);
     }
 
@@ -110,7 +114,7 @@ public class StampService {
                         place,
                         LocalDateTime.now()
                 )));
-        return PlaceVisitResponse.of(visit, distanceMeters, stampType);
+        return PlaceVisitResponse.of(visit, stampType);
     }
 
     private StampAlbum findOrCreateAlbum(Long memberId, Schedule schedule) {
@@ -137,6 +141,13 @@ public class StampService {
         LocalDateTime officialEndAt = schedule.getTravelDate().atTime(OFFICIAL_END_TIME);
         if (recordedAt.isBefore(schedule.getStartedAt()) || recordedAt.isAfter(officialEndAt)) {
             throw new GeneralException(StampErrorCode.LOCATION_TIME_OUT_OF_RANGE);
+        }
+    }
+
+    private void validateAlbumReadable(Schedule schedule, LocalDateTime requestedAt) {
+        LocalDateTime officialEndAt = schedule.getTravelDate().atTime(OFFICIAL_END_TIME);
+        if (!schedule.isStarted() || schedule.getStartedAt() == null || requestedAt.isBefore(officialEndAt)) {
+            throw new GeneralException(StampErrorCode.STAMP_ALBUM_NOT_READY);
         }
     }
 
