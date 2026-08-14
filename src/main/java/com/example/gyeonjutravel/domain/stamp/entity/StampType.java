@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.stamp.entity;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public enum StampType {
@@ -39,5 +40,12 @@ public enum StampType {
 
     public static boolean qualifiesForMaster(int earnedStampCount) {
         return earnedStampCount >= MASTER_REQUIRED_STAMP_COUNT;
+    }
+
+    public static List<String> stampPlaceNames() {
+        return Arrays.stream(values())
+                .map(stampType -> stampType.placeName)
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 }

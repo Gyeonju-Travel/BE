@@ -13,6 +13,9 @@ public interface PlaceRepository extends JpaRepository<Place, Long>, JpaSpecific
 
     long countByCategory(PlaceCategory category);
 
+    @Query("select place from Place place where place.name in :names order by place.id asc")
+    List<Place> findAllByNameInOrderByIdAsc(@Param("names") List<String> names);
+
     @Query("select place from Member member join member.bookmarkedPlaces place "
             + "where member.id = :memberId order by place.id desc")
     List<Place> findBookmarkedPlacesByMemberId(@Param("memberId") Long memberId);
