@@ -5,7 +5,7 @@ import com.example.gyeonjutravel.global.apiPayload.response.code.ErrorCode;
 
 import java.util.Map;
 
-final class ImageFileValidator {
+public final class ImageFileValidator {
     private static final Map<String, String> ALLOWED_EXTENSIONS = Map.of(
             "image/jpeg", ".jpg", "image/png", ".png", "image/webp", ".webp"
     );
@@ -13,7 +13,7 @@ final class ImageFileValidator {
     private ImageFileValidator() {
     }
 
-    static String extensionOf(String contentType) {
+    public static String extensionOf(String contentType) {
         String extension = ALLOWED_EXTENSIONS.get(contentType);
         if (extension == null) {
             throw new GeneralException(ErrorCode.INVALID_IMAGE);
