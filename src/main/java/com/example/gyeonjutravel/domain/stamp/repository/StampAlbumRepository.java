@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface StampAlbumRepository extends JpaRepository<StampAlbum, Long> {
 
@@ -25,5 +26,10 @@ public interface StampAlbumRepository extends JpaRepository<StampAlbum, Long> {
             @Param("scheduleId") Long scheduleId,
             @Param("memberId") Long memberId
     );
+
+    @Query("select distinct album from StampAlbum album "
+            + "left join fetch album.photos "
+            + "where album.member.id = :memberId")
+    List<StampAlbum> findAllWithPhotosByMemberId(@Param("memberId") Long memberId);
 
 }

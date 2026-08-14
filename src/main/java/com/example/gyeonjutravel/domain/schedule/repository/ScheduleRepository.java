@@ -31,6 +31,13 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
             @Param("scheduleIds") List<Long> scheduleIds
     );
 
+    @Query("select distinct schedule from Schedule schedule "
+            + "left join fetch schedule.items item "
+            + "left join fetch item.place "
+            + "where schedule.member.id = :memberId and schedule.started = true "
+            + "order by schedule.travelDate desc, schedule.id desc")
+    List<Schedule> findStartedSchedulesWithItemsByMemberId(@Param("memberId") Long memberId);
+
     @Modifying
     @Query(value = """
             delete from schedule_items

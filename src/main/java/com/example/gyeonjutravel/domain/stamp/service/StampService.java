@@ -9,10 +9,14 @@ import com.example.gyeonjutravel.domain.schedule.exception.ScheduleErrorCode;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
 import com.example.gyeonjutravel.domain.stamp.dto.request.FootprintAddRequest;
 import com.example.gyeonjutravel.domain.stamp.dto.request.PlaceVisitCreateRequest;
+import com.example.gyeonjutravel.domain.stamp.dto.response.MyPageStampItemResponse;
+import com.example.gyeonjutravel.domain.stamp.dto.response.MyPageStampsResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.PetFootprintResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.PlaceVisitResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.ScheduleFootprintResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.StampAlbumResponse;
+import com.example.gyeonjutravel.domain.stamp.dto.response.TravelRecordItemResponse;
+import com.example.gyeonjutravel.domain.stamp.dto.response.TravelRecordsResponse;
 import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
 import com.example.gyeonjutravel.domain.stamp.entity.StampAlbum;
 import com.example.gyeonjutravel.domain.stamp.entity.StampType;
@@ -26,9 +30,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +96,21 @@ public class StampService {
                 .orElseThrow(() -> new GeneralException(StampErrorCode.PET_NOT_FOUND));
         long totalDistanceMeters = stampAlbumRepository.sumTotalDistanceMetersByPetIdAndMemberId(petId, memberId);
         return PetFootprintResponse.of(petId, totalDistanceMeters);
+    }
+
+    public MyPageStampsResponse getMyPageStamps(Long memberId) {
+        List<MyPageStampItemResponse> stamps = earnedStampNames(memberId).stream()
+                .map(MyPageStampItemResponse::of)
+                .toList();
+        return MyPageStampsResponse.from(stamps);
+    }
+
+    public TravelRecordsResponse getTravelRecords(Long memberId) {
+        Map<Long, StampAlbum> albumsByScheduleId = albumsByScheduleId(memberId);
+        List<TravelRecordItemResponse> records = completedSchedules(memberId, albumsByScheduleId).stream()
+                .map(schedule -> TravelRecordItemResponse.from(schedule, albumsByScheduleId.get(schedule.getId())))
+                .toList();
+        return TravelRecordsResponse.of(records, earnedStampNames(memberId).size());
     }
 
     @Transactional
@@ -170,5 +195,41 @@ public class StampService {
                 album.getSchedule().getId()
         );
         return StampAlbumResponse.from(album, visits);
+    }
+
+    private Set<String> earnedStampNames(Long memberId) {
+        Set<String> stampNames = new LinkedHashSet<>();
+        Map<Long, StampAlbum> albumsByScheduleId = albumsByScheduleId(memberId);
+        if (!completedSchedules(memberId, albumsByScheduleId).isEmpty()) {
+            stampNames.add(StampType.PERFECT_TRIP.getDisplayName());
+        }
+        placeVisitRepository.findAllWithPlaceByMemberId(memberId).stream()
+                .map(PlaceVisit::getPlace)
+                .map(StampType::fromPlace)
+                .flatMap(java.util.Optional::stream)
+                .map(StampType::getDisplayName)
+                .forEach(stampNames::add);
+        return stampNames;
+    }
+
+    private List<Schedule> completedSchedules(Long memberId, Map<Long, StampAlbum> albumsByScheduleId) {
+        LocalDate today = LocalDate.now();
+        return scheduleRepository.findStartedSchedulesWithItemsByMemberId(memberId).stream()
+                .filter(schedule -> hasAlbumPhoto(albumsByScheduleId.get(schedule.getId()))
+                        || today.isAfter(schedule.getTravelDate()))
+                .sorted(Comparator.comparing(Schedule::getTravelDate).reversed()
+                        .thenComparing(Comparator.comparing(Schedule::getId).reversed()))
+                .toList();
+    }
+
+    private Map<Long, StampAlbum> albumsByScheduleId(Long memberId) {
+        Map<Long, StampAlbum> albumsByScheduleId = new LinkedHashMap<>();
+        stampAlbumRepository.findAllWithPhotosByMemberId(memberId)
+                .forEach(album -> albumsByScheduleId.put(album.getSchedule().getId(), album));
+        return albumsByScheduleId;
+    }
+
+    private boolean hasAlbumPhoto(StampAlbum album) {
+        return album != null && !album.getPhotos().isEmpty();
     }
 }
