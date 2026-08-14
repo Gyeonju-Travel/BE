@@ -11,11 +11,12 @@ public record ScheduleDetailResponse(
         Long scheduleId,
         LocalDate date,
         DepartureResponse departure,
-        boolean started,
-        LocalDateTime startedAt,
         String lastPlaceName,
+        List<String> placeNames,
         int totalPlaceCount,
-        long totalWalkingDurationSeconds
+        long totalWalkingDurationSeconds,
+        boolean started,
+        LocalDateTime startedAt
 ) {
     public static ScheduleDetailResponse from(Schedule schedule) {
         List<SchedulePlaceDetailResponse> places = schedule.getItems().stream()
@@ -32,11 +33,14 @@ public record ScheduleDetailResponse(
                 schedule.getId(),
                 schedule.getTravelDate(),
                 DepartureResponse.from(schedule.getDepartureArea()),
-                schedule.isStarted(),
-                schedule.getStartedAt(),
                 lastPlaceName,
+                places.stream()
+                        .map(SchedulePlaceDetailResponse::name)
+                        .toList(),
                 places.size(),
-                totalWalkingDurationSeconds
+                totalWalkingDurationSeconds,
+                schedule.isStarted(),
+                schedule.getStartedAt()
         );
     }
 }
