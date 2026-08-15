@@ -16,6 +16,8 @@ import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.repository.BlacklistedTokenRepository;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.member.repository.PasswordResetVerificationRepository;
+import com.example.gyeonjutravel.domain.notification.repository.NotificationRepository;
+import com.example.gyeonjutravel.domain.notification.repository.NotificationSettingRepository;
 import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.domain.report.repository.PlaceReportRepository;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
@@ -45,6 +47,8 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final BlacklistedTokenRepository blacklistedTokenRepository;
     private final PasswordResetVerificationRepository passwordResetVerificationRepository;
+    private final NotificationRepository notificationRepository;
+    private final NotificationSettingRepository notificationSettingRepository;
     private final PetRepository petRepository;
     private final PlaceReportRepository placeReportRepository;
     private final ScheduleRepository scheduleRepository;
@@ -180,6 +184,8 @@ public class MemberService {
     public void withdraw(Member member, String token) {
         blacklistToken(token);
         memberRepository.deleteBookmarksByMemberId(member.getId());
+        notificationRepository.deleteAllByMemberId(member.getId());
+        notificationSettingRepository.deleteByMemberId(member.getId());
         scheduleRepository.deleteItemsByMemberId(member.getId());
         scheduleRepository.deleteAllByMemberId(member.getId());
         placeReportRepository.deletePetPoliciesByMemberId(member.getId());

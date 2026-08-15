@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.schedule.service;
 import com.example.gyeonjutravel.domain.member.entity.Member;
 import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
+import com.example.gyeonjutravel.domain.notification.service.NotificationService;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,11 +45,14 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class ScheduleService {
 
+    private static final LocalTime STAMP_ALBUM_READY_TIME = LocalTime.of(21, 0);
+
     private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleMatrixCache scheduleMatrixCache;
     private final NearestNeighborOptimizer nearestNeighborOptimizer;
+    private final NotificationService notificationService;
 
     public SchedulePreviewResponse preview(Long memberId, SchedulePreviewRequest request) {
         validateUniquePlaceIds(request.placeIds());
@@ -131,7 +136,12 @@ public class ScheduleService {
     @Transactional
     public ScheduleStartResponse start(Long memberId, Long scheduleId) {
         Schedule schedule = findOwnedSchedule(memberId, scheduleId);
-        schedule.start(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        schedule.start(now);
+        if (!now.toLocalTime().isBefore(STAMP_ALBUM_READY_TIME)
+                && now.toLocalDate().equals(schedule.getTravelDate())) {
+            notificationService.createStampAlbumReadyNotificationIfAbsent(schedule);
+        }
         return ScheduleStartResponse.from(schedule);
     }
 
