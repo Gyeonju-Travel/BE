@@ -1,5 +1,6 @@
 package com.example.gyeonjutravel.domain.stamp.service;
 
+import com.example.gyeonjutravel.domain.home.dto.response.HomeResponse;
 import com.example.gyeonjutravel.domain.pet.entity.Pet;
 import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.domain.place.entity.Place;
@@ -96,6 +97,22 @@ public class StampService {
                 .orElseThrow(() -> new GeneralException(StampErrorCode.PET_NOT_FOUND));
         long totalDistanceMeters = stampAlbumRepository.sumTotalDistanceMetersByPetIdAndMemberId(petId, memberId);
         return PetFootprintResponse.of(petId, totalDistanceMeters);
+    }
+
+    public HomeResponse getHome(Long memberId) {
+        Pet representativePet = petRepository.findFirstByMemberIdAndRepresentativeTrue(memberId)
+                .orElseThrow(() -> new GeneralException(StampErrorCode.REPRESENTATIVE_PET_NOT_FOUND));
+        long totalDistanceMeters = stampAlbumRepository.sumTotalDistanceMetersByPetIdAndMemberId(
+                representativePet.getId(),
+                memberId
+        );
+        List<String> stampNames = earnedStampNames(memberId).stream()
+                .limit(3)
+                .toList();
+        List<Place> stampPlaces = placeRepository.findAllByNameInOrderByIdAsc(StampType.stampPlaceNames()).stream()
+                .limit(6)
+                .toList();
+        return HomeResponse.of(representativePet, totalDistanceMeters, stampNames, stampPlaces);
     }
 
     public MyPageStampsResponse getMyPageStamps(Long memberId) {
