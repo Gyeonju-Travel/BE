@@ -102,7 +102,8 @@ public class Pet extends BaseEntity {
             DogSize size,
             Integer age,
             PetGender gender,
-            PetPersonality personality
+            PetPersonality personality,
+            PetPersonality secondPersonality
     ) {
         this.name = name;
         this.profileImageUrl = profileImageUrl;
@@ -111,6 +112,7 @@ public class Pet extends BaseEntity {
         this.age = age;
         this.gender = gender;
         this.personality = personality;
+        this.secondPersonality = secondPersonality;
     }
 
     public void markAsRepresentative() {

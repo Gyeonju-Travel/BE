@@ -6,6 +6,7 @@ import com.example.gyeonjutravel.domain.schedule.dto.request.SchedulePreviewRequ
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleDateResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.SchedulePreviewResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
+import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleStartResponse;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleService;
 import com.example.gyeonjutravel.global.apiPayload.ApiResponse;
 import com.example.gyeonjutravel.global.security.CustomUserDetails;
@@ -45,6 +46,15 @@ public class ScheduleController {
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ApiResponse.ok(scheduleService.getByDate(userDetails.member().getId(), date));
+    }
+
+    @Operation(summary = "일정 시작", description = "선택한 일정을 시작 상태로 변경하고 시작 시각을 저장합니다.")
+    @PostMapping("/{scheduleId}/start")
+    public ApiResponse<ScheduleStartResponse> start(
+            @PathVariable Long scheduleId,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.ok(scheduleService.start(userDetails.member().getId(), scheduleId));
     }
 
     @Operation(

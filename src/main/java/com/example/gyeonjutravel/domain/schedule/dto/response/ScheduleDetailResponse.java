@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.schedule.dto.response;
 import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -11,9 +12,11 @@ public record ScheduleDetailResponse(
         LocalDate date,
         DepartureResponse departure,
         String lastPlaceName,
+        List<String> placeNames,
         int totalPlaceCount,
         long totalWalkingDurationSeconds,
-        List<SchedulePlaceDetailResponse> places
+        boolean started,
+        LocalDateTime startedAt
 ) {
     public static ScheduleDetailResponse from(Schedule schedule) {
         List<SchedulePlaceDetailResponse> places = schedule.getItems().stream()
@@ -31,9 +34,13 @@ public record ScheduleDetailResponse(
                 schedule.getTravelDate(),
                 DepartureResponse.from(schedule.getDepartureArea()),
                 lastPlaceName,
+                places.stream()
+                        .map(SchedulePlaceDetailResponse::name)
+                        .toList(),
                 places.size(),
                 totalWalkingDurationSeconds,
-                places
+                schedule.isStarted(),
+                schedule.getStartedAt()
         );
     }
 }

@@ -31,9 +31,13 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-      # Secret Manager 연결
+      # 일반 환경 변수 설정
+      - '--set-env-vars'
+      - 'STORAGE_PROVIDER=gcs,OPENAI_MODEL=gpt-4.1-mini'
+
+      # Secret Manager 연결 (보안 키 및 인프라 접속 정보)
       - '--set-secrets'
-      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest,TMAP_APP_KEY=TMAP_APP_KEY:latest'
+      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest,TMAP_APP_KEY=TMAP_APP_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GCS_BUCKET=GCS_BUCKET:latest,GCS_PUBLIC_BASE_URL=GCS_PUBLIC_BASE_URL:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
