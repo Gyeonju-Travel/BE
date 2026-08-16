@@ -33,11 +33,15 @@ steps:
 
       # 일반 환경 변수 설정
       - '--set-env-vars'
-      - 'STORAGE_PROVIDER=gcs,OPENAI_MODEL=gpt-4.1-mini'
+      - 'STORAGE_PROVIDER=gcs,OPENAI_MODEL=gpt-4.1-mini,FIREBASE_ADMIN_SDK_FILE_PATH=/secrets/firebase/adminsdk.json'
 
-      # Secret Manager 연결 (보안 키, 인프라 접속 및 서비스 계정 키 경로)
+      # Secret Manager 환경 변수 연결
       - '--set-secrets'
-      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest,TMAP_APP_KEY=TMAP_APP_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GCS_BUCKET=GCS_BUCKET:latest,GCS_PUBLIC_BASE_URL=GCS_PUBLIC_BASE_URL:latest,FIREBASE_ADMIN_SDK_PATH=FIREBASE_ADMIN_SDK_PATH:latest'
+      - 'DB_URL=DB_URL:latest,DB_USER=DB_USER:latest,DB_PW=DB_PW:latest,JWT_SECRET=JWT_SECRET:latest,MAIL_USERNAME=MAIL_USERNAME:latest,MAIL_PASSWORD=MAIL_PASSWORD:latest,TMAP_APP_KEY=TMAP_APP_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,GCS_BUCKET=GCS_BUCKET:latest,GCS_PUBLIC_BASE_URL=GCS_PUBLIC_BASE_URL:latest'
+
+      # Firebase Admin SDK JSON 파일 마운트
+      - '--set-secrets'
+      - '/secrets/firebase/adminsdk.json=FIREBASE_ADMINSDK_JSON:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
