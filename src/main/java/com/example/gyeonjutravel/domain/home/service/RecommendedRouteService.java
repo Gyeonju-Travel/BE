@@ -9,13 +9,16 @@ import com.example.gyeonjutravel.domain.home.dto.request.RecommendedRouteRequest
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteJobResponse;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRoutePlaceResponse;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteResultResponse;
+import com.example.gyeonjutravel.domain.home.enums.DogCondition;
 import com.example.gyeonjutravel.domain.home.enums.RecommendedRouteStatus;
 import com.example.gyeonjutravel.domain.home.enums.RecommendedRouteStep;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteStatusResponse;
 import com.example.gyeonjutravel.domain.home.exception.RecommendedRouteErrorCode;
+import com.example.gyeonjutravel.domain.pet.entity.enums.DogSize;
 import com.example.gyeonjutravel.domain.schedule.dto.request.ScheduleCreateRequest;
 import com.example.gyeonjutravel.domain.schedule.dto.response.DepartureResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
+import com.example.gyeonjutravel.domain.schedule.entity.DepartureArea;
 import com.example.gyeonjutravel.domain.schedule.exception.ScheduleErrorCode;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleService;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -126,7 +130,12 @@ public class RecommendedRouteService {
                 representativePet,
                 dataset
         );
-        List<Place> recommendedPlaces = findRecommendedPlaces(dataset, recommendedPlaceIds);
+        List<Place> recommendedPlaces = normalizeRecommendedPlaces(
+                request,
+                representativePet,
+                dataset,
+                findRecommendedPlaces(dataset, recommendedPlaceIds)
+        );
         validateRecommendedPlaces(recommendedPlaces);
 
         jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.ROUTE_COMPLETED));
@@ -185,9 +194,108 @@ public class RecommendedRouteService {
                 PlaceCategory.ATTRACTION,
                 PlaceCategory.RESTAURANT,
                 PlaceCategory.CAFE
-        ))) {
+        )) || hasMultipleFoodPlaces(places)) {
             throw new GeneralException(RecommendedRouteErrorCode.INVALID_AI_RESPONSE);
         }
+    }
+
+    private List<Place> normalizeRecommendedPlaces(
+            RecommendedRouteRequest request,
+            Pet representativePet,
+            List<Place> dataset,
+            List<Place> aiRecommendedPlaces
+    ) {
+        int targetCount = targetPlaceCount(representativePet.getSize(), request.condition());
+        int attractionCount = targetCount - 2;
+
+        List<Place> attractions = candidatesByCategory(
+                PlaceCategory.ATTRACTION,
+                request.departureArea(),
+                aiRecommendedPlaces,
+                dataset
+        );
+        List<Place> restaurants = candidatesByCategory(
+                PlaceCategory.RESTAURANT,
+                request.departureArea(),
+                aiRecommendedPlaces,
+                dataset
+        );
+        List<Place> cafes = candidatesByCategory(
+                PlaceCategory.CAFE,
+                request.departureArea(),
+                aiRecommendedPlaces,
+                dataset
+        );
+        if (attractions.size() < attractionCount || restaurants.isEmpty() || cafes.isEmpty()) {
+            throw new GeneralException(RecommendedRouteErrorCode.INVALID_AI_RESPONSE);
+        }
+
+        List<Place> selectedAttractions = attractions.subList(0, attractionCount);
+        List<Place> orderedPlaces = new ArrayList<>();
+        orderedPlaces.add(selectedAttractions.get(0));
+        orderedPlaces.add(restaurants.get(0));
+        if (selectedAttractions.size() > 1) {
+            orderedPlaces.add(selectedAttractions.get(1));
+        }
+        orderedPlaces.add(cafes.get(0));
+        if (selectedAttractions.size() > 2) {
+            orderedPlaces.addAll(selectedAttractions.subList(2, selectedAttractions.size()));
+        }
+        return orderedPlaces;
+    }
+
+    private List<Place> candidatesByCategory(
+            PlaceCategory category,
+            DepartureArea departureArea,
+            List<Place> aiRecommendedPlaces,
+            List<Place> dataset
+    ) {
+        Map<Long, Place> candidates = new LinkedHashMap<>();
+        aiRecommendedPlaces.stream()
+                .filter(place -> place.getCategory() == category)
+                .filter(place -> !isDeparturePlace(departureArea, place))
+                .forEach(place -> candidates.put(place.getId(), place));
+        dataset.stream()
+                .filter(place -> place.getCategory() == category)
+                .filter(place -> !isDeparturePlace(departureArea, place))
+                .forEach(place -> candidates.putIfAbsent(place.getId(), place));
+        return new ArrayList<>(candidates.values());
+    }
+
+    private int targetPlaceCount(DogSize dogSize, DogCondition condition) {
+        if (condition == DogCondition.BAD) {
+            return 3;
+        }
+        if (dogSize == DogSize.SMALL) {
+            return condition == DogCondition.BEST ? 4 : 3;
+        }
+        return condition == DogCondition.BEST ? 5 : 4;
+    }
+
+    private boolean isDeparturePlace(
+            DepartureArea departureArea,
+            Place place
+    ) {
+        return departurePlaceNames(departureArea).contains(place.getName());
+    }
+
+    private Set<String> departurePlaceNames(DepartureArea departureArea) {
+        return switch (departureArea) {
+            case HWANGRIDAN_GIL -> Set.of("경주 황리단길");
+            case GEUMRIDAN_GIL -> Set.of("경주읍성");
+            case CHEOMSEONGDAE -> Set.of("경주 첨성대");
+            case GYOCHON_VILLAGE -> Set.of("경주 교촌마을");
+        };
+    }
+
+    private boolean hasMultipleFoodPlaces(List<Place> places) {
+        long restaurantCount = places.stream()
+                .filter(place -> place.getCategory() == PlaceCategory.RESTAURANT)
+                .count();
+        long cafeCount = places.stream()
+                .filter(place -> place.getCategory() == PlaceCategory.CAFE)
+                .count();
+        return restaurantCount != 1 || cafeCount != 1;
     }
 
     private RecommendedRouteResult toResult(
