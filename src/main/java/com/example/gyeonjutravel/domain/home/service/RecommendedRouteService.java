@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -259,7 +260,18 @@ public class RecommendedRouteService {
                 .filter(place -> place.getCategory() == category)
                 .filter(place -> !isDeparturePlace(departureArea, place))
                 .forEach(place -> candidates.putIfAbsent(place.getId(), place));
-        return new ArrayList<>(candidates.values());
+        return shuffled(candidates.values().stream().toList());
+    }
+
+    private List<Place> shuffled(List<Place> places) {
+        List<Place> shuffledPlaces = new ArrayList<>(places);
+        for (int index = shuffledPlaces.size() - 1; index > 0; index--) {
+            int swapIndex = ThreadLocalRandom.current().nextInt(index + 1);
+            Place current = shuffledPlaces.get(index);
+            shuffledPlaces.set(index, shuffledPlaces.get(swapIndex));
+            shuffledPlaces.set(swapIndex, current);
+        }
+        return shuffledPlaces;
     }
 
     private int targetPlaceCount(DogSize dogSize, DogCondition condition) {

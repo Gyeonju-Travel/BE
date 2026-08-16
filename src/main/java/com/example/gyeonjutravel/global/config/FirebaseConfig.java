@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Configuration
 public class FirebaseConfig {
@@ -27,7 +29,8 @@ public class FirebaseConfig {
             return FirebaseApp.initializeApp();
         }
 
-        Path path = Path.of(stripQuotes(credentialsPath)).toAbsolutePath().normalize();
+        Path path = resolveCredentialsPath(credentialsPath)
+                .orElseGet(() -> Path.of(stripQuotes(credentialsPath)).toAbsolutePath().normalize());
         try (InputStream credentials = Files.newInputStream(path)) {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(credentials))
@@ -39,6 +42,38 @@ public class FirebaseConfig {
     @Bean
     public FirebaseMessaging firebaseMessaging(FirebaseApp firebaseApp) {
         return FirebaseMessaging.getInstance(firebaseApp);
+    }
+
+    private Optional<Path> resolveCredentialsPath(String credentialsPath) {
+        Optional<Path> configuredPath = toExistingPath(credentialsPath);
+        if (configuredPath.isPresent()) {
+            return configuredPath;
+        }
+        return readRawCredentialsPathFromEnvFile().flatMap(this::toExistingPath);
+    }
+
+    private Optional<Path> toExistingPath(String value) {
+        try {
+            Path path = Path.of(stripQuotes(value)).toAbsolutePath().normalize();
+            return Files.exists(path) ? Optional.of(path) : Optional.empty();
+        } catch (InvalidPathException exception) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<String> readRawCredentialsPathFromEnvFile() {
+        Path envFile = Path.of("env").toAbsolutePath().normalize();
+        if (!Files.exists(envFile)) {
+            return Optional.empty();
+        }
+        try {
+            return Files.readAllLines(envFile).stream()
+                    .filter(line -> line.startsWith("FIREBASE_ADMIN_SDK_PATH="))
+                    .map(line -> line.substring("FIREBASE_ADMIN_SDK_PATH=".length()))
+                    .findFirst();
+        } catch (IOException exception) {
+            return Optional.empty();
+        }
     }
 
     private String stripQuotes(String value) {
