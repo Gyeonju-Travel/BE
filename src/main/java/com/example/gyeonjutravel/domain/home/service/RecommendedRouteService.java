@@ -59,6 +59,9 @@ public class RecommendedRouteService {
     private final Map<Long, RecommendedRouteJob> jobs = new ConcurrentHashMap<>();
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final AtomicLong recommendationIdGenerator = new AtomicLong(1);
+    private static final long MAX_START_WALKING_DISTANCE_METERS = 4_000;
+    private static final long MAX_ROUTE_SEGMENT_DURATION_SECONDS = 7_200;
+    private static final double EARTH_RADIUS_METERS = 6_371_000;
 
     public RecommendedRouteJobResponse create(Long memberId, RecommendedRouteRequest request) {
         Long recommendationId = recommendationIdGenerator.getAndIncrement();
@@ -120,7 +123,7 @@ public class RecommendedRouteService {
     private RecommendedRouteResult createPreview(Long memberId, Long recommendationId, RecommendedRouteRequest request) {
         Pet representativePet = petRepository.findFirstByMemberIdAndRepresentativeTrue(memberId)
                 .orElseThrow(() -> new GeneralException(RecommendedRouteErrorCode.REPRESENTATIVE_PET_NOT_FOUND));
-        List<Place> dataset = placeRepository.findAll();
+        List<Place> dataset = placesNearDeparture(placeRepository.findAll(), request.departureArea());
         validateDataset(dataset);
 
         jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.CONDITION_CHECKING));
@@ -152,8 +155,34 @@ public class RecommendedRouteService {
                         ))
                         .toList()
         );
+        validateWalkingDurations(recommendedPlaces, matrixPreview);
 
         return toResult(request, recommendedPlaces, matrixPreview);
+    }
+
+    private List<Place> placesNearDeparture(List<Place> places, DepartureArea departureArea) {
+        return places.stream()
+                .filter(place -> distanceMeters(
+                        departureArea.getLongitude(),
+                        departureArea.getLatitude(),
+                        place.getLongitude(),
+                        place.getLatitude()
+                ) <= MAX_START_WALKING_DISTANCE_METERS)
+                .toList();
+    }
+
+    private void validateWalkingDurations(List<Place> recommendedPlaces, MatrixPreview matrixPreview) {
+        String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
+        for (Place place : recommendedPlaces) {
+            String placeNodeKey = ScheduleMatrixCache.placeNodeKey(place.getId());
+            WalkingRoute route = matrixPreview.matrix()
+                    .findRoute(previousNodeKey, placeNodeKey)
+                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            if (route.durationSeconds() > MAX_ROUTE_SEGMENT_DURATION_SECONDS) {
+                throw new GeneralException(RecommendedRouteErrorCode.RECOMMENDED_ROUTE_TOO_FAR);
+            }
+            previousNodeKey = placeNodeKey;
+        }
     }
 
     private void validateDataset(List<Place> places) {
@@ -308,6 +337,19 @@ public class RecommendedRouteService {
                 .filter(place -> place.getCategory() == PlaceCategory.CAFE)
                 .count();
         return restaurantCount != 1 || cafeCount != 1;
+    }
+
+    private double distanceMeters(double fromLongitude, double fromLatitude, double toLongitude, double toLatitude) {
+        double fromLatitudeRadians = Math.toRadians(fromLatitude);
+        double toLatitudeRadians = Math.toRadians(toLatitude);
+        double latitudeDelta = Math.toRadians(toLatitude - fromLatitude);
+        double longitudeDelta = Math.toRadians(toLongitude - fromLongitude);
+
+        double a = Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2)
+                + Math.cos(fromLatitudeRadians) * Math.cos(toLatitudeRadians)
+                * Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return EARTH_RADIUS_METERS * c;
     }
 
     private RecommendedRouteResult toResult(
