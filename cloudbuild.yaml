@@ -33,7 +33,7 @@ steps:
 
       # 일반 환경 변수 설정
       - '--set-env-vars'
-      - 'STORAGE_PROVIDER=gcs,OPENAI_MODEL=gpt-4.1-mini,FIREBASE_ADMIN_SDK_PATH=/secrets/firebase/adminsdk.json'
+      - 'STORAGE_PROVIDER=gcs,OPENAI_MODEL=gpt-4.1-mini,FIREBASE_ADMIN_SDK_FILE_PATH=/secrets/firebase/adminsdk.json'
 
       # Secret Manager 환경 변수 연결
       - '--set-secrets'
