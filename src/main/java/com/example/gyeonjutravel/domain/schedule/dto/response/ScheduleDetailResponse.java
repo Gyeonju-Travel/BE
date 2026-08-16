@@ -12,9 +12,9 @@ public record ScheduleDetailResponse(
         LocalDate date,
         DepartureResponse departure,
         String lastPlaceName,
-        List<String> placeNames,
         int totalPlaceCount,
         long totalWalkingDurationSeconds,
+        List<SchedulePlaceDetailResponse> places,
         boolean started,
         LocalDateTime startedAt
 ) {
@@ -34,11 +34,9 @@ public record ScheduleDetailResponse(
                 schedule.getTravelDate(),
                 DepartureResponse.from(schedule.getDepartureArea()),
                 lastPlaceName,
-                places.stream()
-                        .map(SchedulePlaceDetailResponse::name)
-                        .toList(),
                 places.size(),
                 totalWalkingDurationSeconds,
+                places,
                 schedule.isStarted(),
                 schedule.getStartedAt()
         );
