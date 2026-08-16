@@ -13,7 +13,10 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,6 +45,28 @@ public class StampController {
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         return ApiResponse.ok(stampService.getAlbum(userDetails.member().getId(), scheduleId));
+    }
+
+    @Operation(
+            summary = "스크랩 앨범 이미지 저장",
+            description = "스크랩 앨범 화면을 PNG 이미지로 생성해 다운로드합니다."
+    )
+    @GetMapping(value = "/api/schedules/{scheduleId}/stamp-album/image", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getAlbumImage(
+            @PathVariable Long scheduleId,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        byte[] image = stampService.getAlbumImage(userDetails.member().getId(), scheduleId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("stamp-album-" + scheduleId + ".png")
+                                .build()
+                                .toString()
+                )
+                .body(image);
     }
 
     @Operation(

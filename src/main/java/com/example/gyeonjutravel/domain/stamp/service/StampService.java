@@ -56,6 +56,7 @@ public class StampService {
     private final StampAlbumRepository stampAlbumRepository;
     private final PlaceVisitRepository placeVisitRepository;
     private final ImageStorageService imageStorageService;
+    private final StampAlbumImageRenderer stampAlbumImageRenderer;
 
     @Transactional
     public ScheduleFootprintResponse addFootprints(Long memberId, Long scheduleId, FootprintAddRequest request) {
@@ -90,6 +91,19 @@ public class StampService {
         StampAlbum album = stampAlbumRepository.findByScheduleIdAndMemberId(scheduleId, memberId)
                 .orElseGet(() -> findOrCreateAlbum(memberId, schedule));
         return toAlbumResponse(memberId, album);
+    }
+
+    public byte[] getAlbumImage(Long memberId, Long scheduleId) {
+        Schedule schedule = findOwnedSchedule(memberId, scheduleId);
+        validateAlbumReadable(schedule, LocalDateTime.now());
+
+        StampAlbum album = stampAlbumRepository.findByScheduleIdAndMemberId(scheduleId, memberId)
+                .orElseGet(() -> findOrCreateAlbum(memberId, schedule));
+        List<PlaceVisit> visits = placeVisitRepository.findAllByMemberIdAndScheduleIdOrderByVisitedAtAsc(
+                memberId,
+                album.getSchedule().getId()
+        );
+        return stampAlbumImageRenderer.render(album, representativeStampName(visits));
     }
 
     public PetFootprintResponse getPetFootprints(Long memberId, Long petId) {
@@ -212,6 +226,16 @@ public class StampService {
                 album.getSchedule().getId()
         );
         return StampAlbumResponse.from(album, visits);
+    }
+
+    private String representativeStampName(List<PlaceVisit> visits) {
+        return visits.stream()
+                .map(PlaceVisit::getPlace)
+                .map(StampType::fromPlace)
+                .flatMap(java.util.Optional::stream)
+                .findFirst()
+                .map(StampType::getDisplayName)
+                .orElse(StampType.PERFECT_TRIP.getDisplayName());
     }
 
     private Set<String> earnedStampNames(Long memberId) {
