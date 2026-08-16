@@ -44,6 +44,9 @@ dependencies {
     // Google Cloud Storage
     implementation 'com.google.cloud:google-cloud-storage:2.43.1'
 
+    // Firebase Cloud Messaging
+    implementation 'com.google.firebase:firebase-admin:9.4.3'
+
     // GMAIL
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-web'
