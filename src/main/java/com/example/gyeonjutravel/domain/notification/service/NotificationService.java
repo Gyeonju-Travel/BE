@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.notification.service;
 import com.example.gyeonjutravel.domain.member.entity.Member;
 import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
+import com.example.gyeonjutravel.domain.notification.dto.request.FcmTokenRegisterRequest;
 import com.example.gyeonjutravel.domain.notification.dto.request.NotificationSettingUpdateRequest;
 import com.example.gyeonjutravel.domain.notification.dto.response.NotificationListItemResponse;
 import com.example.gyeonjutravel.domain.notification.dto.response.NotificationListResponse;
@@ -12,6 +13,8 @@ import com.example.gyeonjutravel.domain.notification.entity.Notification;
 import com.example.gyeonjutravel.domain.notification.entity.NotificationSetting;
 import com.example.gyeonjutravel.domain.notification.entity.NotificationType;
 import com.example.gyeonjutravel.domain.notification.exception.NotificationErrorCode;
+import com.example.gyeonjutravel.domain.notification.entity.FcmToken;
+import com.example.gyeonjutravel.domain.notification.repository.FcmTokenRepository;
 import com.example.gyeonjutravel.domain.notification.repository.NotificationRepository;
 import com.example.gyeonjutravel.domain.notification.repository.NotificationSettingRepository;
 import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
@@ -37,6 +40,8 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationSettingRepository notificationSettingRepository;
     private final ScheduleRepository scheduleRepository;
+    private final FcmTokenRepository fcmTokenRepository;
+    private final FcmPushService fcmPushService;
 
     public NotificationListResponse getNotifications(Long memberId) {
         return new NotificationListResponse(
@@ -57,6 +62,22 @@ public class NotificationService {
         NotificationSetting setting = findOrCreateSetting(memberId);
         setting.updateEnabled(request.enabled());
         return NotificationSettingResponse.from(setting);
+    }
+
+    @Transactional
+    public void registerFcmToken(Long memberId, FcmTokenRegisterRequest request) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
+        fcmTokenRepository.findByToken(request.token())
+                .ifPresentOrElse(
+                        token -> token.updateMember(member),
+                        () -> fcmTokenRepository.save(new FcmToken(member, request.token()))
+                );
+    }
+
+    @Transactional
+    public void deleteFcmToken(Long memberId, FcmTokenRegisterRequest request) {
+        fcmTokenRepository.deleteByMemberIdAndToken(memberId, request.token());
     }
 
     @Transactional
@@ -88,7 +109,7 @@ public class NotificationService {
 
     private Notification findOrCreateStampAlbumReadyNotification(Schedule schedule) {
         Long memberId = schedule.getMember().getId();
-        return notificationRepository.findByMemberIdAndScheduleIdAndType(
+        Notification notification = notificationRepository.findByMemberIdAndScheduleIdAndType(
                         memberId,
                         schedule.getId(),
                         NotificationType.STAMP_ALBUM_READY
@@ -102,6 +123,8 @@ public class NotificationService {
                 "/api/schedules/" + schedule.getId() + "/stamp-album",
                 schedule.getTravelDate().atTime(STAMP_ALBUM_READY_TIME)
         )));
+        fcmPushService.send(notification);
+        return notification;
     }
 
     private NotificationSetting findOrCreateSetting(Long memberId) {
