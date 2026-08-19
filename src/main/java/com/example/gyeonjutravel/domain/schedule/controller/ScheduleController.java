@@ -57,6 +57,15 @@ public class ScheduleController {
         return ApiResponse.ok(scheduleService.start(userDetails.member().getId(), scheduleId));
     }
 
+    @Operation(summary = "일정 시작 취소", description = "선택한 일정의 시작 상태를 취소하고 시작 시각을 초기화합니다.")
+    @DeleteMapping("/{scheduleId}/start")
+    public ApiResponse<ScheduleStartResponse> cancelStart(
+            @PathVariable Long scheduleId,
+            @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        return ApiResponse.ok(scheduleService.cancelStart(userDetails.member().getId(), scheduleId));
+    }
+
     @Operation(
             summary = "일정 미리보기",
             description = "도보시간 매트릭스를 계산하고 최근접 이웃 알고리즘으로 장소를 자동 정렬합니다."

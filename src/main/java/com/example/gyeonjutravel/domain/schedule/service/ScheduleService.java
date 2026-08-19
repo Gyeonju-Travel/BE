@@ -146,6 +146,13 @@ public class ScheduleService {
     }
 
     @Transactional
+    public ScheduleStartResponse cancelStart(Long memberId, Long scheduleId) {
+        Schedule schedule = findOwnedSchedule(memberId, scheduleId);
+        schedule.cancelStart();
+        return ScheduleStartResponse.from(schedule);
+    }
+
+    @Transactional
     public ScheduleResponse create(Long memberId, ScheduleCreateRequest request) {
         SchedulePreview preview = scheduleMatrixCache.getPreview(request.matrixToken(), memberId);
         validateOrder(preview.placeIds(), request.orderedPlaceIds());

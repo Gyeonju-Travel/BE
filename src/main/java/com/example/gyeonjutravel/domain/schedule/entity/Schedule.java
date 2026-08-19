@@ -80,6 +80,11 @@ public class Schedule extends BaseEntity {
         this.startedAt = startedAt;
     }
 
+    public void cancelStart() {
+        this.started = false;
+        this.startedAt = null;
+    }
+
     public void addItem(
             Place place,
             int visitOrder,
