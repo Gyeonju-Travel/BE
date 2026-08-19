@@ -48,6 +48,17 @@ public class OpenAiRecommendedPlaceSelector implements RecommendedPlaceSelector 
             - GEUMRIDAN_GIL: 경주읍성
             첨성대와 황리단길은 약 800m의 자연스러운 연계 동선으로 취급합니다.
 
+            권역 우선 추천 규칙
+            1. 출발지 권역에 있는 관광지, 식당, 카페를 우선 추천합니다.
+            2. 출발지 권역 안에 조건에 맞는 후보가 없거나 필수 구성을 채우기에 부족한 경우에만 인접 권역 후보를 사용합니다.
+            3. 인접 권역 후보는 아래 고정 순위대로만 확장합니다. 이 순위는 실측 거리 기준 고정값이므로 위경도나 예상 거리로 재계산하거나 순서를 바꾸지 않습니다.
+            - GEUMRIDAN_GIL 출발: HWANGRIDAN_GIL 1순위 → CHEOMSEONGDAE 2순위 → GYOCHON_VILLAGE 3순위(비권장)
+            - HWANGRIDAN_GIL 출발: CHEOMSEONGDAE 1순위 → GYOCHON_VILLAGE 2순위 → GEUMRIDAN_GIL 3순위
+            - CHEOMSEONGDAE 출발: GYOCHON_VILLAGE 1순위 → HWANGRIDAN_GIL 2순위 → GEUMRIDAN_GIL 3순위(비권장)
+            - GYOCHON_VILLAGE 출발: CHEOMSEONGDAE 1순위 → HWANGRIDAN_GIL 2순위 → GEUMRIDAN_GIL 3순위(비권장)
+            4. 비권장 권역은 앞선 권역 후보만으로 필수 구성과 추천 장소 수를 채울 수 없을 때만 사용합니다.
+            5. 최종 placeIds는 선택한 권역 우선순위 흐름을 따르도록 방문 순서를 정렬하여, 지도에 표시했을 때 번호가 권역 간에 왕복하지 않게 합니다.
+
             견종 x 컨디션별 추천 장소 수
             - SMALL: BAD 3곳 / NORMAL 3곳 / BEST 4곳
             - MEDIUM: BAD 3곳 / NORMAL 4곳 / BEST 5곳
