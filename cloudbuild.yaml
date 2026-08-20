@@ -29,6 +29,8 @@ steps:
       - 'asia-northeast3'
       - '--platform'
       - 'managed'
+      - '--max-instances'
+      - '1'
       - '--allow-unauthenticated'
 
       # 일반 환경 변수 설정
