@@ -9,6 +9,8 @@ import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
 import com.example.gyeonjutravel.domain.schedule.entity.DepartureArea;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache;
+import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
+import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
 import com.example.gyeonjutravel.global.tmap.MatrixNode;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrix;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrixClient;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +65,9 @@ class ScheduleControllerIntegrationTest {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private PlaceVisitRepository placeVisitRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -289,6 +295,7 @@ class ScheduleControllerIntegrationTest {
         second.addItem(park, 1, 400, 500);
         second = scheduleRepository.save(second);
         second.start(LocalDate.now().atTime(10, 0));
+        placeVisitRepository.save(new PlaceVisit(member, second, park, LocalDateTime.now()));
 
         Schedule anotherDate = new Schedule(member, targetDate.plusDays(1), DepartureArea.CHEOMSEONGDAE);
         anotherDate.addItem(cafe, 1, 300, 350);

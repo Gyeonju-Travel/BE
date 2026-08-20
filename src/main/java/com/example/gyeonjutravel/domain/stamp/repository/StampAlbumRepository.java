@@ -2,6 +2,7 @@ package com.example.gyeonjutravel.domain.stamp.repository;
 
 import com.example.gyeonjutravel.domain.stamp.entity.StampAlbum;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -32,4 +33,24 @@ public interface StampAlbumRepository extends JpaRepository<StampAlbum, Long> {
             + "where album.member.id = :memberId")
     List<StampAlbum> findAllWithPhotosByMemberId(@Param("memberId") Long memberId);
 
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            delete from stamp_album_photos
+            where album_id in (
+                select id from stamp_albums
+                where member_id = :memberId and schedule_id in (:scheduleIds)
+            )
+            """, nativeQuery = true)
+    void deletePhotosByMemberIdAndScheduleIdIn(
+            @Param("memberId") Long memberId,
+            @Param("scheduleIds") List<Long> scheduleIds
+    );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from StampAlbum album "
+            + "where album.member.id = :memberId and album.schedule.id in :scheduleIds")
+    void deleteAllByMemberIdAndScheduleIdIn(
+            @Param("memberId") Long memberId,
+            @Param("scheduleIds") List<Long> scheduleIds
+    );
 }

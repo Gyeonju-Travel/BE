@@ -55,4 +55,24 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
     @Modifying
     @Query(value = "delete from schedules where member_id = :memberId", nativeQuery = true)
     void deleteAllByMemberId(@Param("memberId") Long memberId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            delete from schedule_items
+            where schedule_id in (:scheduleIds)
+            and schedule_id in (
+                select id from schedules where member_id = :memberId
+            )
+            """, nativeQuery = true)
+    void deleteItemsByMemberIdAndScheduleIdIn(
+            @Param("memberId") Long memberId,
+            @Param("scheduleIds") List<Long> scheduleIds
+    );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "delete from schedules where member_id = :memberId and id in (:scheduleIds)", nativeQuery = true)
+    void deleteAllByMemberIdAndIdIn(
+            @Param("memberId") Long memberId,
+            @Param("scheduleIds") List<Long> scheduleIds
+    );
 }

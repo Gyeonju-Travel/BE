@@ -3,6 +3,7 @@ package com.example.gyeonjutravel.domain.schedule.service;
 import com.example.gyeonjutravel.domain.member.entity.Member;
 import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
+import com.example.gyeonjutravel.domain.notification.repository.NotificationRepository;
 import com.example.gyeonjutravel.domain.notification.service.NotificationService;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
@@ -23,6 +24,8 @@ import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.MatrixPreview;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.PlaceCoordinate;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.SchedulePreview;
+import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
+import com.example.gyeonjutravel.domain.stamp.repository.StampAlbumRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.tmap.WalkingRoute;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrix;
@@ -53,6 +56,9 @@ public class ScheduleService {
     private final ScheduleMatrixCache scheduleMatrixCache;
     private final NearestNeighborOptimizer nearestNeighborOptimizer;
     private final NotificationService notificationService;
+    private final PlaceVisitRepository placeVisitRepository;
+    private final StampAlbumRepository stampAlbumRepository;
+    private final NotificationRepository notificationRepository;
 
     public SchedulePreviewResponse preview(Long memberId, SchedulePreviewRequest request) {
         validateUniquePlaceIds(request.placeIds());
@@ -252,7 +258,16 @@ public class ScheduleService {
         if (schedules.size() != scheduleIds.size()) {
             throw new GeneralException(ScheduleErrorCode.SCHEDULE_NOT_FOUND);
         }
-        scheduleRepository.deleteAll(schedules);
+        deleteScheduleDependents(memberId, scheduleIds);
+        scheduleRepository.deleteItemsByMemberIdAndScheduleIdIn(memberId, scheduleIds);
+        scheduleRepository.deleteAllByMemberIdAndIdIn(memberId, scheduleIds);
+    }
+
+    private void deleteScheduleDependents(Long memberId, List<Long> scheduleIds) {
+        placeVisitRepository.deleteAllByMemberIdAndScheduleIdIn(memberId, scheduleIds);
+        notificationRepository.deleteAllByMemberIdAndScheduleIdIn(memberId, scheduleIds);
+        stampAlbumRepository.deletePhotosByMemberIdAndScheduleIdIn(memberId, scheduleIds);
+        stampAlbumRepository.deleteAllByMemberIdAndScheduleIdIn(memberId, scheduleIds);
     }
 
     private List<Place> findBookmarkedPlaces(Long memberId, List<Long> placeIds) {
