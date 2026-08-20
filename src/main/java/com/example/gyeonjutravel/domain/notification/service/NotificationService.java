@@ -109,22 +109,24 @@ public class NotificationService {
 
     private Notification findOrCreateStampAlbumReadyNotification(Schedule schedule) {
         Long memberId = schedule.getMember().getId();
-        Notification notification = notificationRepository.findByMemberIdAndScheduleIdAndType(
+        return notificationRepository.findByMemberIdAndScheduleIdAndType(
                         memberId,
                         schedule.getId(),
                         NotificationType.STAMP_ALBUM_READY
                 )
-                .orElseGet(() -> notificationRepository.save(new Notification(
-                schedule.getMember(),
-                schedule,
-                NotificationType.STAMP_ALBUM_READY,
-                "일정이 종료됐나요?",
-                "스크랩으로 오늘 하루를 기록해보세요.",
-                "/api/schedules/" + schedule.getId() + "/stamp-album",
-                schedule.getTravelDate().atTime(STAMP_ALBUM_READY_TIME)
-        )));
-        fcmPushService.send(notification);
-        return notification;
+                .orElseGet(() -> {
+                    Notification notification = notificationRepository.save(new Notification(
+                            schedule.getMember(),
+                            schedule,
+                            NotificationType.STAMP_ALBUM_READY,
+                            "일정이 종료됐나요?",
+                            "스크랩으로 오늘 하루를 기록해보세요.",
+                            "/api/schedules/" + schedule.getId() + "/stamp-album",
+                            schedule.getTravelDate().atTime(STAMP_ALBUM_READY_TIME)
+                    ));
+                    fcmPushService.send(notification);
+                    return notification;
+                });
     }
 
     private NotificationSetting findOrCreateSetting(Long memberId) {
