@@ -20,18 +20,22 @@ import com.example.gyeonjutravel.domain.schedule.dto.response.DepartureResponse;
 import com.example.gyeonjutravel.domain.schedule.dto.response.ScheduleResponse;
 import com.example.gyeonjutravel.domain.schedule.entity.DepartureArea;
 import com.example.gyeonjutravel.domain.schedule.exception.ScheduleErrorCode;
+import com.example.gyeonjutravel.domain.schedule.service.NearestNeighborOptimizer;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleService;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.MatrixPreview;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.PlaceCoordinate;
+import com.example.gyeonjutravel.domain.stamp.entity.StampType;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
 import com.example.gyeonjutravel.global.tmap.WalkingRoute;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,7 +43,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -49,6 +52,7 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class RecommendedRouteService {
 
     private final PlaceRepository placeRepository;
@@ -56,12 +60,15 @@ public class RecommendedRouteService {
     private final ScheduleMatrixCache scheduleMatrixCache;
     private final ScheduleService scheduleService;
     private final RecommendedPlaceSelector recommendedPlaceSelector;
+    private final NearestNeighborOptimizer nearestNeighborOptimizer;
     private final Map<Long, RecommendedRouteJob> jobs = new ConcurrentHashMap<>();
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final AtomicLong recommendationIdGenerator = new AtomicLong(1);
     private static final long MAX_START_WALKING_DISTANCE_METERS = 4_000;
     private static final long MAX_ROUTE_SEGMENT_DURATION_SECONDS = 7_200;
     private static final double EARTH_RADIUS_METERS = 6_371_000;
+    private static final int UNPRIORITIZED_PLACE_RANK = 1_000;
+    private static final String PINK_MUHLY_PLACE_NAME = "경주 핑크뮬리(경주 핑크뮬리 군락지)";
 
     public RecommendedRouteJobResponse create(Long memberId, RecommendedRouteRequest request) {
         Long recommendationId = recommendationIdGenerator.getAndIncrement();
@@ -116,8 +123,16 @@ public class RecommendedRouteService {
             RecommendedRouteResult result = createPreview(memberId, jobId, request);
             jobs.put(jobId, RecommendedRouteJob.completed(memberId, result));
         } catch (Exception exception) {
-            jobs.put(jobId, RecommendedRouteJob.failed(memberId, exception.getMessage()));
+            log.warn("Recommended route job failed. memberId={}, jobId={}", memberId, jobId, exception);
+            jobs.put(jobId, RecommendedRouteJob.failed(memberId, failureMessage(exception)));
         }
+    }
+
+    private String failureMessage(Exception exception) {
+        if (exception.getMessage() != null && !exception.getMessage().isBlank()) {
+            return exception.getMessage();
+        }
+        return exception.getClass().getSimpleName();
     }
 
     private RecommendedRouteResult createPreview(Long memberId, Long recommendationId, RecommendedRouteRequest request) {
@@ -140,7 +155,7 @@ public class RecommendedRouteService {
                 dataset,
                 findRecommendedPlaces(dataset, recommendedPlaceIds)
         );
-        validateRecommendedPlaces(recommendedPlaces);
+        validateRecommendedPlaces(recommendedPlaces, targetPlaceCount(representativePet.getSize(), request.condition()));
 
         jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.ROUTE_COMPLETED));
         MatrixPreview matrixPreview = scheduleMatrixCache.createPreview(
@@ -155,9 +170,30 @@ public class RecommendedRouteService {
                         ))
                         .toList()
         );
+        recommendedPlaces = optimizeRouteOrder(recommendedPlaces, matrixPreview);
         validateWalkingDurations(recommendedPlaces, matrixPreview);
 
         return toResult(request, recommendedPlaces, matrixPreview);
+    }
+
+    private List<Place> optimizeRouteOrder(List<Place> places, MatrixPreview matrixPreview) {
+        Map<Long, Place> placesById = new HashMap<>();
+        places.forEach(place -> placesById.put(place.getId(), place));
+        return nearestNeighborOptimizer.optimize(
+                        places.stream()
+                                .map(Place::getId)
+                                .toList(),
+                        matrixPreview.matrix()
+                )
+                .stream()
+                .map(placeId -> {
+                    Place place = placesById.get(placeId);
+                    if (place == null) {
+                        throw new GeneralException(RecommendedRouteErrorCode.INVALID_AI_RESPONSE);
+                    }
+                    return place;
+                })
+                .toList();
     }
 
     private List<Place> placesNearDeparture(List<Place> places, DepartureArea departureArea) {
@@ -212,19 +248,19 @@ public class RecommendedRouteService {
         return places;
     }
 
-    private void validateRecommendedPlaces(List<Place> places) {
+    private void validateRecommendedPlaces(List<Place> places, int targetCount) {
         Set<Long> placeIds = new HashSet<>();
         Set<PlaceCategory> categories = EnumSet.noneOf(PlaceCategory.class);
         for (Place place : places) {
             placeIds.add(place.getId());
             categories.add(place.getCategory());
         }
-        if (places.size() < 3 || places.size() > 5 || placeIds.size() != places.size()
+        if (places.size() != targetCount || placeIds.size() != places.size()
                 || !categories.containsAll(List.of(
                 PlaceCategory.ATTRACTION,
                 PlaceCategory.RESTAURANT,
                 PlaceCategory.CAFE
-        )) || hasMultipleFoodPlaces(places)) {
+        )) || hasInvalidFoodPlaceCount(places, targetCount)) {
             throw new GeneralException(RecommendedRouteErrorCode.INVALID_AI_RESPONSE);
         }
     }
@@ -236,7 +272,9 @@ public class RecommendedRouteService {
             List<Place> aiRecommendedPlaces
     ) {
         int targetCount = targetPlaceCount(representativePet.getSize(), request.condition());
-        int attractionCount = targetCount - 2;
+        int restaurantCount = 1;
+        int cafeCount = targetCount == 5 ? 2 : 1;
+        int attractionCount = targetCount - restaurantCount - cafeCount;
 
         List<Place> attractions = candidatesByCategory(
                 PlaceCategory.ATTRACTION,
@@ -256,20 +294,25 @@ public class RecommendedRouteService {
                 aiRecommendedPlaces,
                 dataset
         );
-        if (attractions.size() < attractionCount || restaurants.isEmpty() || cafes.isEmpty()) {
+        if (attractions.size() < attractionCount || restaurants.size() < restaurantCount || cafes.size() < cafeCount) {
             throw new GeneralException(RecommendedRouteErrorCode.INVALID_AI_RESPONSE);
         }
 
         List<Place> selectedAttractions = attractions.subList(0, attractionCount);
+        List<Place> selectedRestaurants = restaurants.subList(0, restaurantCount);
+        List<Place> selectedCafes = cafes.subList(0, cafeCount);
         List<Place> orderedPlaces = new ArrayList<>();
         orderedPlaces.add(selectedAttractions.get(0));
-        orderedPlaces.add(restaurants.get(0));
+        orderedPlaces.add(selectedRestaurants.get(0));
         if (selectedAttractions.size() > 1) {
             orderedPlaces.add(selectedAttractions.get(1));
         }
-        orderedPlaces.add(cafes.get(0));
+        orderedPlaces.add(selectedCafes.get(0));
         if (selectedAttractions.size() > 2) {
             orderedPlaces.addAll(selectedAttractions.subList(2, selectedAttractions.size()));
+        }
+        if (selectedCafes.size() > 1) {
+            orderedPlaces.addAll(selectedCafes.subList(1, selectedCafes.size()));
         }
         return orderedPlaces;
     }
@@ -281,26 +324,99 @@ public class RecommendedRouteService {
             List<Place> dataset
     ) {
         Map<Long, Place> candidates = new LinkedHashMap<>();
+        Map<Long, Integer> aiRanks = new HashMap<>();
+        for (int index = 0; index < aiRecommendedPlaces.size(); index++) {
+            aiRanks.put(aiRecommendedPlaces.get(index).getId(), index);
+        }
         aiRecommendedPlaces.stream()
                 .filter(place -> place.getCategory() == category)
-                .filter(place -> !isDeparturePlace(departureArea, place))
+                .filter(place -> isSelectableCandidate(category, departureArea, place))
                 .forEach(place -> candidates.put(place.getId(), place));
         dataset.stream()
                 .filter(place -> place.getCategory() == category)
-                .filter(place -> !isDeparturePlace(departureArea, place))
+                .filter(place -> isSelectableCandidate(category, departureArea, place))
                 .forEach(place -> candidates.putIfAbsent(place.getId(), place));
-        return shuffled(candidates.values().stream().toList());
+        return candidates.values().stream()
+                .sorted(candidateComparator(category, departureArea, aiRanks))
+                .toList();
     }
 
-    private List<Place> shuffled(List<Place> places) {
-        List<Place> shuffledPlaces = new ArrayList<>(places);
-        for (int index = shuffledPlaces.size() - 1; index > 0; index--) {
-            int swapIndex = ThreadLocalRandom.current().nextInt(index + 1);
-            Place current = shuffledPlaces.get(index);
-            shuffledPlaces.set(index, shuffledPlaces.get(swapIndex));
-            shuffledPlaces.set(swapIndex, current);
+    private boolean isSelectableCandidate(PlaceCategory category, DepartureArea departureArea, Place place) {
+        if (category == PlaceCategory.ATTRACTION) {
+            return isRecommendedAttraction(place) && !isDeparturePlace(departureArea, place);
         }
-        return shuffledPlaces;
+        return !isDeparturePlace(departureArea, place);
+    }
+
+    private boolean isRecommendedAttraction(Place place) {
+        return StampType.fromPlace(place).isPresent() || PINK_MUHLY_PLACE_NAME.equals(place.getName());
+    }
+
+    private Comparator<Place> candidateComparator(
+            PlaceCategory category,
+            DepartureArea departureArea,
+            Map<Long, Integer> aiRanks
+    ) {
+        return Comparator
+                .comparingInt((Place place) -> attractionPriority(category, departureArea, place))
+                .thenComparingInt(place -> areaPriority(departureArea, place))
+                .thenComparingInt(place -> aiRanks.getOrDefault(place.getId(), UNPRIORITIZED_PLACE_RANK))
+                .thenComparing(Place::getId);
+    }
+
+    private int attractionPriority(PlaceCategory category, DepartureArea departureArea, Place place) {
+        if (category != PlaceCategory.ATTRACTION) {
+            return UNPRIORITIZED_PLACE_RANK;
+        }
+        List<String> priorityNames = priorityAttractionNames(departureArea);
+        int index = priorityNames.indexOf(place.getName());
+        return index == -1 ? UNPRIORITIZED_PLACE_RANK : index;
+    }
+
+    private List<String> priorityAttractionNames(DepartureArea departureArea) {
+        return switch (departureArea) {
+            case CHEOMSEONGDAE -> List.of(
+                    PINK_MUHLY_PLACE_NAME,
+                    "경주 계림",
+                    "경주 황리단길"
+            );
+            case GYOCHON_VILLAGE -> List.of(
+                    "월정교",
+                    PINK_MUHLY_PLACE_NAME,
+                    "경주 첨성대",
+                    "경주 계림"
+            );
+            case HWANGRIDAN_GIL -> List.of(
+                    PINK_MUHLY_PLACE_NAME,
+                    "경주 첨성대",
+                    "경주 계림",
+                    "월정교"
+            );
+            case GEUMRIDAN_GIL -> List.of(
+                    "경주 황리단길",
+                    PINK_MUHLY_PLACE_NAME,
+                    "경주 첨성대",
+                    "경주 계림"
+            );
+        };
+    }
+
+    private int areaPriority(DepartureArea departureArea, Place place) {
+        if (place.getArea() == null) {
+            return UNPRIORITIZED_PLACE_RANK;
+        }
+        List<String> priorityAreas = priorityAreaNames(departureArea);
+        int index = priorityAreas.indexOf(place.getArea());
+        return index == -1 ? UNPRIORITIZED_PLACE_RANK : index;
+    }
+
+    private List<String> priorityAreaNames(DepartureArea departureArea) {
+        return switch (departureArea) {
+            case GEUMRIDAN_GIL -> List.of("금리단길", "황리단길", "첨성대", "교촌마을");
+            case HWANGRIDAN_GIL -> List.of("황리단길", "첨성대", "교촌마을", "금리단길");
+            case CHEOMSEONGDAE -> List.of("첨성대", "교촌마을", "황리단길", "금리단길");
+            case GYOCHON_VILLAGE -> List.of("교촌마을", "첨성대", "황리단길", "금리단길");
+        };
     }
 
     private int targetPlaceCount(DogSize dogSize, DogCondition condition) {
@@ -329,14 +445,14 @@ public class RecommendedRouteService {
         };
     }
 
-    private boolean hasMultipleFoodPlaces(List<Place> places) {
+    private boolean hasInvalidFoodPlaceCount(List<Place> places, int targetCount) {
         long restaurantCount = places.stream()
                 .filter(place -> place.getCategory() == PlaceCategory.RESTAURANT)
                 .count();
         long cafeCount = places.stream()
                 .filter(place -> place.getCategory() == PlaceCategory.CAFE)
                 .count();
-        return restaurantCount != 1 || cafeCount != 1;
+        return restaurantCount != 1 || cafeCount != (targetCount == 5 ? 2 : 1);
     }
 
     private double distanceMeters(double fromLongitude, double fromLatitude, double toLongitude, double toLatitude) {
