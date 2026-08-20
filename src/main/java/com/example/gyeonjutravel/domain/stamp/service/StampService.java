@@ -18,10 +18,12 @@ import com.example.gyeonjutravel.domain.stamp.dto.response.ScheduleFootprintResp
 import com.example.gyeonjutravel.domain.stamp.dto.response.StampAlbumResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.TravelRecordItemResponse;
 import com.example.gyeonjutravel.domain.stamp.dto.response.TravelRecordsResponse;
+import com.example.gyeonjutravel.domain.stamp.entity.EarnedStamp;
 import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
 import com.example.gyeonjutravel.domain.stamp.entity.StampAlbum;
 import com.example.gyeonjutravel.domain.stamp.entity.StampType;
 import com.example.gyeonjutravel.domain.stamp.exception.StampErrorCode;
+import com.example.gyeonjutravel.domain.stamp.repository.EarnedStampRepository;
 import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
 import com.example.gyeonjutravel.domain.stamp.repository.StampAlbumRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
@@ -55,6 +57,7 @@ public class StampService {
     private final PetRepository petRepository;
     private final StampAlbumRepository stampAlbumRepository;
     private final PlaceVisitRepository placeVisitRepository;
+    private final EarnedStampRepository earnedStampRepository;
     private final ImageStorageService imageStorageService;
 
     @Transactional
@@ -156,6 +159,7 @@ public class StampService {
                         place,
                         LocalDateTime.now()
                 )));
+        saveEarnedStampIfAbsent(schedule, stampType, place, visit.getVisitedAt());
         return PlaceVisitResponse.of(visit, stampType);
     }
 
@@ -217,6 +221,10 @@ public class StampService {
     private Set<String> earnedStampNames(Long memberId) {
         Set<String> stampNames = new LinkedHashSet<>();
         stampNames.add(StampType.WELCOME_DOG.getDisplayName());
+        earnedStampRepository.findAllByMemberIdOrderByEarnedAtAscIdAsc(memberId).stream()
+                .map(EarnedStamp::getStampType)
+                .map(StampType::getDisplayName)
+                .forEach(stampNames::add);
         Map<Long, StampAlbum> albumsByScheduleId = albumsByScheduleId(memberId);
         if (!completedSchedules(memberId, albumsByScheduleId).isEmpty()) {
             stampNames.add(StampType.PERFECT_TRIP.getDisplayName());
@@ -249,5 +257,23 @@ public class StampService {
 
     private boolean hasAlbumPhoto(StampAlbum album) {
         return album != null && !album.getPhotos().isEmpty();
+    }
+
+    private void saveEarnedStampIfAbsent(
+            Schedule schedule,
+            StampType stampType,
+            Place sourcePlace,
+            LocalDateTime earnedAt
+    ) {
+        Long memberId = schedule.getMember().getId();
+        if (!earnedStampRepository.existsByMemberIdAndStampType(memberId, stampType)) {
+            earnedStampRepository.save(new EarnedStamp(
+                    schedule.getMember(),
+                    stampType,
+                    schedule.getId(),
+                    sourcePlace,
+                    earnedAt
+            ));
+        }
     }
 }

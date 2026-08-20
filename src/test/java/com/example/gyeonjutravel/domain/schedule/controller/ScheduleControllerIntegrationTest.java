@@ -10,6 +10,8 @@ import com.example.gyeonjutravel.domain.schedule.entity.DepartureArea;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache;
 import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
+import com.example.gyeonjutravel.domain.stamp.entity.StampType;
+import com.example.gyeonjutravel.domain.stamp.repository.EarnedStampRepository;
 import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
 import com.example.gyeonjutravel.global.tmap.MatrixNode;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrix;
@@ -68,6 +70,9 @@ class ScheduleControllerIntegrationTest {
 
     @Autowired
     private PlaceVisitRepository placeVisitRepository;
+
+    @Autowired
+    private EarnedStampRepository earnedStampRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -283,7 +288,7 @@ class ScheduleControllerIntegrationTest {
                 .phoneNumber("010-1111-1111")
                 .build());
         Place cafe = savePlace("SCHEDULE:DATE:CAFE", "날짜 카페", 129.2111, 35.8311);
-        Place park = savePlace("SCHEDULE:DATE:PARK", "날짜 공원", 129.2222, 35.8422);
+        Place park = savePlace("SCHEDULE:DATE:PARK", "경주 첨성대", 129.2222, 35.8422);
         LocalDate targetDate = LocalDate.now().plusDays(2);
 
         Schedule first = new Schedule(member, targetDate, DepartureArea.HWANGRIDAN_GIL);
@@ -325,7 +330,7 @@ class ScheduleControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.schedules[0].totalPlaceCount").value(2))
                 .andExpect(jsonPath("$.result.schedules[0].totalWalkingDurationSeconds").value(300))
                 .andExpect(jsonPath("$.result.schedules[0].departure.code").value("HWANGRIDAN_GIL"))
-                .andExpect(jsonPath("$.result.schedules[0].lastPlaceName").value("날짜 공원"))
+                .andExpect(jsonPath("$.result.schedules[0].lastPlaceName").value("경주 첨성대"))
                 .andExpect(jsonPath("$.result.schedules[0].places[0].placeId").value(cafe.getId()))
                 .andExpect(jsonPath("$.result.schedules[0].places[0].category").value("CAFE"))
                 .andExpect(jsonPath("$.result.schedules[0].places[0].categoryLabel").value("카페"))
@@ -337,7 +342,7 @@ class ScheduleControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.schedules[1].startedAt").isNotEmpty())
                 .andExpect(jsonPath("$.result.schedules[1].ended").value(false))
                 .andExpect(jsonPath("$.result.schedules[1].endedAt").isEmpty())
-                .andExpect(jsonPath("$.result.schedules[1].lastPlaceName").value("날짜 공원"))
+                .andExpect(jsonPath("$.result.schedules[1].lastPlaceName").value("경주 첨성대"))
                 .andExpect(jsonPath("$.result.schedules[1].totalPlaceCount").value(1))
                 .andExpect(jsonPath("$.result.schedules[1].totalWalkingDurationSeconds").value(400));
 
@@ -354,6 +359,7 @@ class ScheduleControllerIntegrationTest {
         assertThat(scheduleRepository.existsById(second.getId())).isFalse();
         assertThat(scheduleRepository.existsById(anotherDate.getId())).isTrue();
         assertThat(scheduleRepository.existsById(anotherMembersSchedule.getId())).isTrue();
+        assertThat(earnedStampRepository.existsByMemberIdAndStampType(member.getId(), StampType.CHEOMSEONGDAE)).isTrue();
 
         mockMvc.perform(delete("/api/schedules")
                         .header("Authorization", "Bearer " + accessToken)

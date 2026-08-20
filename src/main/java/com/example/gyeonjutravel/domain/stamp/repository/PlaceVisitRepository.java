@@ -23,6 +23,16 @@ public interface PlaceVisitRepository extends JpaRepository<PlaceVisit, Long> {
             + "order by visit.visitedAt asc")
     List<PlaceVisit> findAllWithPlaceByMemberId(@Param("memberId") Long memberId);
 
+    @Query("select visit from PlaceVisit visit "
+            + "join fetch visit.schedule "
+            + "join fetch visit.place "
+            + "where visit.member.id = :memberId and visit.schedule.id in :scheduleIds "
+            + "order by visit.visitedAt asc")
+    List<PlaceVisit> findAllWithPlaceByMemberIdAndScheduleIdIn(
+            @Param("memberId") Long memberId,
+            @Param("scheduleIds") List<Long> scheduleIds
+    );
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("delete from PlaceVisit visit "
             + "where visit.member.id = :memberId and visit.schedule.id in :scheduleIds")

@@ -33,6 +33,15 @@ public interface StampAlbumRepository extends JpaRepository<StampAlbum, Long> {
             + "where album.member.id = :memberId")
     List<StampAlbum> findAllWithPhotosByMemberId(@Param("memberId") Long memberId);
 
+    @Query("select distinct album from StampAlbum album "
+            + "left join fetch album.photos "
+            + "join fetch album.schedule "
+            + "where album.member.id = :memberId and album.schedule.id in :scheduleIds")
+    List<StampAlbum> findAllWithPhotosByMemberIdAndScheduleIdIn(
+            @Param("memberId") Long memberId,
+            @Param("scheduleIds") List<Long> scheduleIds
+    );
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
             delete from stamp_album_photos

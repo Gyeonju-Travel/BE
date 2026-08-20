@@ -24,6 +24,11 @@ import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.MatrixPreview;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.PlaceCoordinate;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache.SchedulePreview;
+import com.example.gyeonjutravel.domain.stamp.entity.EarnedStamp;
+import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
+import com.example.gyeonjutravel.domain.stamp.entity.StampAlbum;
+import com.example.gyeonjutravel.domain.stamp.entity.StampType;
+import com.example.gyeonjutravel.domain.stamp.repository.EarnedStampRepository;
 import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
 import com.example.gyeonjutravel.domain.stamp.repository.StampAlbumRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
@@ -34,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -58,6 +64,7 @@ public class ScheduleService {
     private final NotificationService notificationService;
     private final PlaceVisitRepository placeVisitRepository;
     private final StampAlbumRepository stampAlbumRepository;
+    private final EarnedStampRepository earnedStampRepository;
     private final NotificationRepository notificationRepository;
 
     public SchedulePreviewResponse preview(Long memberId, SchedulePreviewRequest request) {
@@ -258,9 +265,39 @@ public class ScheduleService {
         if (schedules.size() != scheduleIds.size()) {
             throw new GeneralException(ScheduleErrorCode.SCHEDULE_NOT_FOUND);
         }
+        preserveEarnedStamps(memberId, schedules);
         deleteScheduleDependents(memberId, scheduleIds);
         scheduleRepository.deleteItemsByMemberIdAndScheduleIdIn(memberId, scheduleIds);
         scheduleRepository.deleteAllByMemberIdAndIdIn(memberId, scheduleIds);
+    }
+
+    private void preserveEarnedStamps(Long memberId, List<Schedule> schedules) {
+        List<Long> scheduleIds = schedules.stream()
+                .map(Schedule::getId)
+                .toList();
+
+        for (PlaceVisit visit : placeVisitRepository.findAllWithPlaceByMemberIdAndScheduleIdIn(memberId, scheduleIds)) {
+            StampType.fromPlace(visit.getPlace())
+                    .ifPresent(stampType -> saveEarnedStampIfAbsent(
+                            visit.getSchedule(),
+                            stampType,
+                            visit.getPlace(),
+                            visit.getVisitedAt()
+                    ));
+        }
+
+        Map<Long, StampAlbum> albumsByScheduleId = new HashMap<>();
+        stampAlbumRepository.findAllWithPhotosByMemberIdAndScheduleIdIn(memberId, scheduleIds)
+                .forEach(album -> albumsByScheduleId.put(album.getSchedule().getId(), album));
+        schedules.stream()
+                .filter(schedule -> hasCompletedTravelRecord(schedule, albumsByScheduleId.get(schedule.getId())))
+                .findFirst()
+                .ifPresent(schedule -> saveEarnedStampIfAbsent(
+                        schedule,
+                        StampType.PERFECT_TRIP,
+                        null,
+                        schedule.getTravelDate().atTime(STAMP_ALBUM_READY_TIME)
+                ));
     }
 
     private void deleteScheduleDependents(Long memberId, List<Long> scheduleIds) {
@@ -268,6 +305,29 @@ public class ScheduleService {
         notificationRepository.deleteAllByMemberIdAndScheduleIdIn(memberId, scheduleIds);
         stampAlbumRepository.deletePhotosByMemberIdAndScheduleIdIn(memberId, scheduleIds);
         stampAlbumRepository.deleteAllByMemberIdAndScheduleIdIn(memberId, scheduleIds);
+    }
+
+    private void saveEarnedStampIfAbsent(
+            Schedule schedule,
+            StampType stampType,
+            Place sourcePlace,
+            LocalDateTime earnedAt
+    ) {
+        Long memberId = schedule.getMember().getId();
+        if (!earnedStampRepository.existsByMemberIdAndStampType(memberId, stampType)) {
+            earnedStampRepository.save(new EarnedStamp(
+                    schedule.getMember(),
+                    stampType,
+                    schedule.getId(),
+                    sourcePlace,
+                    earnedAt
+            ));
+        }
+    }
+
+    private boolean hasCompletedTravelRecord(Schedule schedule, StampAlbum album) {
+        return LocalDate.now().isAfter(schedule.getTravelDate())
+                || album != null && !album.getPhotos().isEmpty();
     }
 
     private List<Place> findBookmarkedPlaces(Long memberId, List<Long> placeIds) {
