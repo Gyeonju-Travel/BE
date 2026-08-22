@@ -30,4 +30,8 @@ public interface PlaceVisitRepository extends JpaRepository<PlaceVisit, Long> {
             @Param("memberId") Long memberId,
             @Param("scheduleIds") List<Long> scheduleIds
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from PlaceVisit visit where visit.member.id = :memberId")
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }
