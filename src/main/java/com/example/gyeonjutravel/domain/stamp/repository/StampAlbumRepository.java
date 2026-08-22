@@ -53,4 +53,17 @@ public interface StampAlbumRepository extends JpaRepository<StampAlbum, Long> {
             @Param("memberId") Long memberId,
             @Param("scheduleIds") List<Long> scheduleIds
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            delete from stamp_album_photos
+            where album_id in (
+                select id from stamp_albums where member_id = :memberId
+            )
+            """, nativeQuery = true)
+    void deletePhotosByMemberId(@Param("memberId") Long memberId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("delete from StampAlbum album where album.member.id = :memberId")
+    void deleteAllByMemberId(@Param("memberId") Long memberId);
 }
