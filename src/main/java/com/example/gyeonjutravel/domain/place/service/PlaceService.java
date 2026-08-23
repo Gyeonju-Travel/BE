@@ -90,6 +90,7 @@ public class PlaceService {
         if (!member.removeBookmarks(Set.copyOf(placeIds))) {
             throw new GeneralException(PlaceErrorCode.BOOKMARK_NOT_FOUND);
         }
+        memberRepository.flush();
     }
 
     private Specification<Place> createSpecification(
