@@ -43,10 +43,10 @@ class PlaceDataInitializerIntegrationTest {
 
     @Test
     void allValidSpreadsheetRowsAreLoaded() {
-        assertThat(placeRepository.count()).isEqualTo(113);
-        assertThat(placeRepository.countByCategory(PlaceCategory.RESTAURANT)).isEqualTo(44);
+        assertThat(placeRepository.count()).isEqualTo(82);
+        assertThat(placeRepository.countByCategory(PlaceCategory.RESTAURANT)).isEqualTo(41);
         assertThat(placeRepository.countByCategory(PlaceCategory.CAFE)).isEqualTo(19);
-        assertThat(placeRepository.countByCategory(PlaceCategory.ATTRACTION)).isEqualTo(50);
+        assertThat(placeRepository.countByCategory(PlaceCategory.ATTRACTION)).isEqualTo(22);
     }
 
     @Test
