@@ -733,33 +733,6 @@
       "sourceKey": "PLACE:28",
       "category": "RESTAURANT",
       "originalCategory": "식당",
-      "name": "후프후프",
-      "area": "황리단길",
-      "administrativeDistrict": "사정동",
-      "detailCategory": "브런치",
-      "roadAddress": "경북 경주시 태종로 736 후프후프",
-      "lotAddress": "경북 경주시 사정동 1-17",
-      "postalCode": null,
-      "phone": "010-4762-0729",
-      "businessHours": "평일 11:00 -18:00",
-      "breakTime": null,
-      "closedDays": null,
-      "hoursNote": "주말 10:00 - 19:-00",
-      "longitude": 129.2086493,
-      "latitude": 35.83914953,
-      "imageUrl": null,
-      "petAccessType": "야외석",
-      "allowedPets": null,
-      "petRequirements": "리드줄",
-      "petInfo": null,
-      "petFacilities": null,
-      "petProvidedItems": null,
-      "petSafetyInfo": null
-    },
-    {
-      "sourceKey": "PLACE:29",
-      "category": "RESTAURANT",
-      "originalCategory": "식당",
       "name": "황리화덕가",
       "area": "황리단길",
       "administrativeDistrict": "사정동",
@@ -784,7 +757,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:30",
+      "sourceKey": "PLACE:29",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "향택 경주",
@@ -811,7 +784,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:31",
+      "sourceKey": "PLACE:30",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "무궁무진",
@@ -838,7 +811,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:32",
+      "sourceKey": "PLACE:31",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "노키",
@@ -865,7 +838,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:33",
+      "sourceKey": "PLACE:32",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "마카다",
@@ -892,7 +865,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:34",
+      "sourceKey": "PLACE:33",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황리단 치킨",
@@ -919,7 +892,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:35",
+      "sourceKey": "PLACE:34",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "담요 따뜻한 손길",
@@ -946,7 +919,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:36",
+      "sourceKey": "PLACE:35",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "스컹크웍스",
@@ -973,7 +946,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:37",
+      "sourceKey": "PLACE:36",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "굿즈",
@@ -1000,7 +973,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:38",
+      "sourceKey": "PLACE:37",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "비밀공간",
@@ -1027,7 +1000,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:39",
+      "sourceKey": "PLACE:38",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "샬로우커피 황리단길점",
@@ -1054,7 +1027,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:40",
+      "sourceKey": "PLACE:39",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "데어벤치",
@@ -1081,7 +1054,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:41",
+      "sourceKey": "PLACE:40",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "스위피",
@@ -1108,7 +1081,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:42",
+      "sourceKey": "PLACE:41",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "아르떼",
@@ -1135,7 +1108,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:43",
+      "sourceKey": "PLACE:42",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "키도트",
@@ -1162,7 +1135,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:44",
+      "sourceKey": "PLACE:43",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "후프후프",
@@ -1189,7 +1162,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:45",
+      "sourceKey": "PLACE:44",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "올리브",
@@ -1216,7 +1189,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:46",
+      "sourceKey": "PLACE:45",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "양지다방",
@@ -1243,7 +1216,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:47",
+      "sourceKey": "PLACE:46",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "미실카페",
@@ -1270,7 +1243,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:48",
+      "sourceKey": "PLACE:47",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "햇오프커피",
@@ -1297,7 +1270,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:49",
+      "sourceKey": "PLACE:48",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "비화커피",
@@ -1324,7 +1297,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:50",
+      "sourceKey": "PLACE:49",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "오버랩",
@@ -1351,7 +1324,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:51",
+      "sourceKey": "PLACE:50",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "주돈",
@@ -1378,7 +1351,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:52",
+      "sourceKey": "PLACE:51",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "서울뒷고기막창",
@@ -1405,7 +1378,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:53",
+      "sourceKey": "PLACE:52",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "옐라",
@@ -1432,7 +1405,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:54",
+      "sourceKey": "PLACE:53",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "대호당",
@@ -1459,7 +1432,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:55",
+      "sourceKey": "PLACE:54",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "사계돈",
@@ -1486,7 +1459,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:56",
+      "sourceKey": "PLACE:55",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "황오바오",
@@ -1513,7 +1486,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:57",
+      "sourceKey": "PLACE:56",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "시간의 여백",
@@ -1540,7 +1513,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:58",
+      "sourceKey": "PLACE:57",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "리커피하우스",
@@ -1567,7 +1540,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:59",
+      "sourceKey": "PLACE:58",
       "category": "RESTAURANT",
       "originalCategory": "식당",
       "name": "진수성찬",
@@ -1594,7 +1567,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:60",
+      "sourceKey": "PLACE:59",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "베이글베이글러",
@@ -1621,7 +1594,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:61",
+      "sourceKey": "PLACE:60",
       "category": "CAFE",
       "originalCategory": "카페",
       "name": "제이커피 경주첨성대점",
@@ -1648,7 +1621,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:62",
+      "sourceKey": "PLACE:61",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 핑크뮬리(경주 핑크뮬리 군락지)",
@@ -1675,7 +1648,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:63",
+      "sourceKey": "PLACE:62",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "파도소리길",
@@ -1702,7 +1675,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:64",
+      "sourceKey": "PLACE:63",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 교촌마을",
@@ -1729,7 +1702,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:65",
+      "sourceKey": "PLACE:64",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "빛누리정원",
@@ -1756,7 +1729,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:66",
+      "sourceKey": "PLACE:65",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 불국사 [유네스코 세계유산]",
@@ -1783,7 +1756,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:67",
+      "sourceKey": "PLACE:66",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 보문관광단지",
@@ -1810,7 +1783,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:68",
+      "sourceKey": "PLACE:67",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 황리단길",
@@ -1837,7 +1810,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:69",
+      "sourceKey": "PLACE:68",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "화랑의 언덕",
@@ -1864,7 +1837,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:70",
+      "sourceKey": "PLACE:69",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "나정고운모래해변",
@@ -1891,7 +1864,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:71",
+      "sourceKey": "PLACE:70",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "보문호",
@@ -1918,7 +1891,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:72",
+      "sourceKey": "PLACE:71",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 계림",
@@ -1945,7 +1918,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:73",
+      "sourceKey": "PLACE:72",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "월정교",
@@ -1972,7 +1945,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:74",
+      "sourceKey": "PLACE:73",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "감포항",
@@ -1999,7 +1972,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:75",
+      "sourceKey": "PLACE:74",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "국민힐링파크",
@@ -2026,7 +1999,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:76",
+      "sourceKey": "PLACE:75",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "화랑의언덕",
@@ -2053,7 +2026,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:77",
+      "sourceKey": "PLACE:76",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 서출지",
@@ -2080,7 +2053,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:78",
+      "sourceKey": "PLACE:77",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주엑스포대공원",
@@ -2107,7 +2080,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:79",
+      "sourceKey": "PLACE:78",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "보문정(경주)",
@@ -2134,7 +2107,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:80",
+      "sourceKey": "PLACE:79",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "신라왕경숲",
@@ -2161,7 +2134,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:81",
+      "sourceKey": "PLACE:80",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주읍성",
@@ -2188,7 +2161,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:82",
+      "sourceKey": "PLACE:81",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 첨성대",
@@ -2215,7 +2188,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:83",
+      "sourceKey": "PLACE:82",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 문무대왕릉",

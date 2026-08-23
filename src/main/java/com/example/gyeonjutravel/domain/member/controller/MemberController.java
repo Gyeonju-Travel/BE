@@ -5,9 +5,11 @@ import com.example.gyeonjutravel.domain.member.dto.request.MemberSignUpRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetCodeConfirmRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetVerificationRequest;
+import com.example.gyeonjutravel.domain.member.dto.request.TokenRefreshRequest;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberAuthResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberSignUpResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.PasswordResetVerificationResponse;
+import com.example.gyeonjutravel.domain.member.dto.response.TokenRefreshResponse;
 import com.example.gyeonjutravel.domain.member.exception.MemberErrorCode;
 import com.example.gyeonjutravel.domain.member.service.MemberService;
 import com.example.gyeonjutravel.global.apiPayload.ApiResponse;
@@ -53,6 +55,15 @@ public class MemberController {
     @PostMapping("/login")
     public ApiResponse<MemberAuthResponse> login(@Valid @RequestBody MemberLoginRequest request) {
         return ApiResponse.ok(memberService.login(request));
+    }
+
+    @Operation(
+            summary = "access token 재발급",
+            description = "refresh token을 검증한 뒤 새로운 JWT access token을 발급합니다."
+    )
+    @PostMapping("/token/refresh")
+    public ApiResponse<TokenRefreshResponse> refreshAccessToken(@Valid @RequestBody TokenRefreshRequest request) {
+        return ApiResponse.ok(memberService.refreshAccessToken(request));
     }
 
     @Operation(summary = "비밀번호 재설정 인증번호 발송",

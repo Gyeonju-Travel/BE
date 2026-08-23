@@ -6,9 +6,11 @@ import com.example.gyeonjutravel.domain.member.dto.request.MemberSignUpRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetCodeConfirmRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetVerificationRequest;
+import com.example.gyeonjutravel.domain.member.dto.request.TokenRefreshRequest;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberAuthResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberSignUpResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.PasswordResetVerificationResponse;
+import com.example.gyeonjutravel.domain.member.dto.response.TokenRefreshResponse;
 import com.example.gyeonjutravel.domain.member.entity.BlacklistedToken;
 import com.example.gyeonjutravel.domain.member.entity.Member;
 import com.example.gyeonjutravel.domain.member.entity.PasswordResetVerification;
@@ -104,6 +106,24 @@ public class MemberService {
         }
 
         return createAuthResponse(member);
+    }
+
+    public TokenRefreshResponse refreshAccessToken(TokenRefreshRequest request) {
+        String refreshToken = request.refreshToken();
+        if (blacklistedTokenRepository.existsByToken(refreshToken) || !jwtTokenProvider.isValidRefreshToken(refreshToken)) {
+            throw new GeneralException(MemberErrorCode.INVALID_TOKEN);
+        }
+
+        String email = jwtTokenProvider.getSubject(refreshToken);
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        return new TokenRefreshResponse(
+                jwtTokenProvider.createAccessToken(member),
+                refreshToken,
+                jwtTokenProvider.getAccessTokenExpiresInSeconds(),
+                jwtTokenProvider.getRefreshTokenExpiresInSeconds()
+        );
     }
 
     @Transactional
