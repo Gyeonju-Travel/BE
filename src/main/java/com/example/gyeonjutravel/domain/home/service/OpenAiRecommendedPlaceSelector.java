@@ -71,6 +71,8 @@ public class OpenAiRecommendedPlaceSelector implements RecommendedPlaceSelector 
             - 3곳 루트: 카페 1곳
             - 4곳 루트: 카페 1곳
             - 5곳 루트: 카페 2곳
+            카페가 2곳인 5곳 루트에서는 두 카페를 연속해서 배치하지 않습니다.
+            카페 사이에 다른 장소를 배치하되, 불필요한 왕복이 생기지 않도록 전체 도보 동선이 가장 자연스러운 순서를 선택합니다.
 
             대형견 규칙
             대형견의 경우 식당과 카페는 야외석이 확인된 장소만 추천합니다.

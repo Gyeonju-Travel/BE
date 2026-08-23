@@ -179,10 +179,16 @@ public class RecommendedRouteService {
     private List<Place> optimizeRouteOrder(List<Place> places, MatrixPreview matrixPreview) {
         Map<Long, Place> placesById = new HashMap<>();
         places.forEach(place -> placesById.put(place.getId(), place));
-        return nearestNeighborOptimizer.optimize(
-                        places.stream()
-                                .map(Place::getId)
-                                .toList(),
+        List<Long> placeIds = places.stream()
+                .map(Place::getId)
+                .toList();
+        Set<Long> cafeIds = places.stream()
+                .filter(place -> place.getCategory() == PlaceCategory.CAFE)
+                .map(Place::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        return nearestNeighborOptimizer.optimizeAvoidingConsecutive(
+                        placeIds,
+                        cafeIds,
                         matrixPreview.matrix()
                 )
                 .stream()
@@ -452,7 +458,8 @@ public class RecommendedRouteService {
         long cafeCount = places.stream()
                 .filter(place -> place.getCategory() == PlaceCategory.CAFE)
                 .count();
-        return restaurantCount != 1 || cafeCount != (targetCount == 5 ? 2 : 1);
+        long expectedCafeCount = targetCount == 5 ? 2 : 1;
+        return restaurantCount != 1 || cafeCount != expectedCafeCount;
     }
 
     private double distanceMeters(double fromLongitude, double fromLatitude, double toLongitude, double toLatitude) {

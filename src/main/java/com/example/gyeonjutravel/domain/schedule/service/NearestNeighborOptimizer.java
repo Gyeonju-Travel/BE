@@ -39,6 +39,68 @@ public class NearestNeighborOptimizer {
         return orderedPlaceIds;
     }
 
+    public List<Long> optimizeAvoidingConsecutive(
+            List<Long> placeIds,
+            Set<Long> separatedPlaceIds,
+            WalkingMatrix matrix
+    ) {
+        List<List<Long>> candidates = new ArrayList<>();
+        collectValidOrders(
+                placeIds,
+                separatedPlaceIds,
+                new ArrayList<>(placeIds.size()),
+                new LinkedHashSet<>(placeIds),
+                candidates
+        );
+        return candidates.stream()
+                .min(Comparator.comparingLong(order -> totalDurationSeconds(order, matrix)))
+                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+    }
+
+    private void collectValidOrders(
+            List<Long> placeIds,
+            Set<Long> separatedPlaceIds,
+            List<Long> current,
+            Set<Long> unvisited,
+            List<List<Long>> candidates
+    ) {
+        if (unvisited.isEmpty()) {
+            candidates.add(List.copyOf(current));
+            return;
+        }
+        for (Long placeId : placeIds) {
+            if (!unvisited.contains(placeId) || isConsecutiveSeparatedPlace(current, placeId, separatedPlaceIds)) {
+                continue;
+            }
+            current.add(placeId);
+            unvisited.remove(placeId);
+            collectValidOrders(placeIds, separatedPlaceIds, current, unvisited, candidates);
+            unvisited.add(placeId);
+            current.remove(current.size() - 1);
+        }
+    }
+
+    private boolean isConsecutiveSeparatedPlace(
+            List<Long> current,
+            Long nextPlaceId,
+            Set<Long> separatedPlaceIds
+    ) {
+        return !current.isEmpty()
+                && separatedPlaceIds.contains(current.get(current.size() - 1))
+                && separatedPlaceIds.contains(nextPlaceId);
+    }
+
+    private long totalDurationSeconds(List<Long> placeIds, WalkingMatrix matrix) {
+        long totalDurationSeconds = 0;
+        String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
+        for (Long placeId : placeIds) {
+            String placeNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
+            totalDurationSeconds += route(matrix, previousNodeKey, placeNodeKey).durationSeconds();
+            previousNodeKey = placeNodeKey;
+        }
+        return totalDurationSeconds;
+    }
+
     private WalkingRoute route(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
         return matrix.findRoute(fromNodeKey, toNodeKey)
                 .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
