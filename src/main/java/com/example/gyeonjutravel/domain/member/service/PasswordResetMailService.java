@@ -23,8 +23,19 @@ public class PasswordResetMailService {
         message.setFrom(from);
         message.setTo(email);
         message.setSubject("[견주여행] 비밀번호 재설정 인증번호");
-        message.setText("인증번호는 " + verificationCode + "입니다. "
-                + expirationMinutes + "분 안에 입력해 주세요.");
+        message.setText("""
+                안녕하세요, 견주여행입니다.
+
+                비밀번호 재설정을 위한 인증번호를 안내드립니다.
+
+                인증번호: %s
+
+                해당 인증번호는 %d분 동안 유효하니, 시간 내에 입력해 주세요.
+                본인이 요청하지 않은 메일이라면 이 메일을 무시해 주셔도 됩니다.
+
+                감사합니다.
+                견주여행 드림
+                """.formatted(verificationCode, expirationMinutes));
 
         try {
             mailSender.send(message);
