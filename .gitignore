@@ -39,3 +39,4 @@ out/
 
 env
 /src/main/resources/data/gcp-key.json
+/src/main/resources/data/gyeonju-travel-firebase-adminsdk.json
