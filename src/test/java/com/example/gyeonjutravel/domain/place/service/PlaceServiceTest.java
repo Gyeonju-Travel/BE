@@ -27,9 +27,10 @@ class PlaceServiceTest {
     @BeforeEach
     void setUp() {
         placeRepository.saveAll(List.of(
-                createPlace("PLACE:1", "료미", PlaceCategory.RESTAURANT, 129.2097, 35.8356),
-                createPlace("PLACE:2", "데어벤치", PlaceCategory.CAFE, 129.2127, 35.8351),
-                createPlace("PLACE:3", "경주 첨성대", PlaceCategory.ATTRACTION, 129.2185, 35.8343)
+                createPlace("PLACE:1", "료미", PlaceCategory.RESTAURANT, "황리단길", 129.2097, 35.8356),
+                createPlace("PLACE:2", "데어벤치", PlaceCategory.CAFE, "황리단길", 129.2127, 35.8351),
+                createPlace("PLACE:3", "경주 첨성대", PlaceCategory.ATTRACTION, "첨성대", 129.2185, 35.8343),
+                createPlace("PLACE:4", "교촌카페", PlaceCategory.CAFE, "교촌마을", 129.2161, 35.8317)
         ));
     }
 
@@ -47,7 +48,15 @@ class PlaceServiceTest {
     void noFilterReturnsAllPlaces() {
         MapPlacePageResponse result = placeService.search(null, null, 0, 200);
 
-        assertThat(result.totalElements()).isEqualTo(3);
+        assertThat(result.totalElements()).isEqualTo(4);
+    }
+
+    @Test
+    void keywordTokensCanMatchAreaAndCategoryTogether() {
+        MapPlacePageResponse result = placeService.search(null, "황리단길 카페", 0, 200);
+
+        assertThat(result.totalElements()).isEqualTo(1);
+        assertThat(result.places()).extracting("name").containsExactly("데어벤치");
     }
 
     @Test
@@ -61,6 +70,7 @@ class PlaceServiceTest {
             String sourceKey,
             String name,
             PlaceCategory category,
+            String area,
             double longitude,
             double latitude
     ) {
@@ -69,6 +79,7 @@ class PlaceServiceTest {
                 .category(category)
                 .originalCategory(category.getLabel())
                 .name(name)
+                .area(area)
                 .roadAddress("경북 경주시 테스트로 1")
                 .longitude(longitude)
                 .latitude(latitude)
