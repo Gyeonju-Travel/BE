@@ -1595,33 +1595,6 @@
     },
     {
       "sourceKey": "PLACE:60",
-      "category": "CAFE",
-      "originalCategory": "카페",
-      "name": "제이커피 경주첨성대점",
-      "area": "첨성대",
-      "administrativeDistrict": "인왕동",
-      "detailCategory": "디저트",
-      "roadAddress": "경북 경주시 첨성로 167",
-      "lotAddress": "경북 경주시 인왕동 812-10",
-      "postalCode": null,
-      "phone": "0507-1383-3180",
-      "businessHours": "매일 10:00 - 20:00",
-      "breakTime": null,
-      "closedDays": "화요일",
-      "hoursNote": null,
-      "longitude": 129.2190745,
-      "latitude": 35.83580809,
-      "imageUrl": null,
-      "petAccessType": "실내석",
-      "allowedPets": null,
-      "petRequirements": "이동장, 애견유모차",
-      "petInfo": null,
-      "petFacilities": null,
-      "petProvidedItems": null,
-      "petSafetyInfo": null
-    },
-    {
-      "sourceKey": "PLACE:61",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 핑크뮬리(경주 핑크뮬리 군락지)",
@@ -1648,7 +1621,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:62",
+      "sourceKey": "PLACE:61",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "파도소리길",
@@ -1675,7 +1648,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:63",
+      "sourceKey": "PLACE:62",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 교촌마을",
@@ -1702,7 +1675,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:64",
+      "sourceKey": "PLACE:63",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "빛누리정원",
@@ -1729,7 +1702,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:65",
+      "sourceKey": "PLACE:64",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 불국사 [유네스코 세계유산]",
@@ -1756,7 +1729,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:66",
+      "sourceKey": "PLACE:65",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 보문관광단지",
@@ -1783,7 +1756,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:67",
+      "sourceKey": "PLACE:66",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 황리단길",
@@ -1810,7 +1783,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:68",
+      "sourceKey": "PLACE:67",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "화랑의 언덕",
@@ -1837,7 +1810,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:69",
+      "sourceKey": "PLACE:68",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "나정고운모래해변",
@@ -1864,7 +1837,7 @@
       "petSafetyInfo": "전 견종 동반 가능"
     },
     {
-      "sourceKey": "PLACE:70",
+      "sourceKey": "PLACE:69",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "보문호",
@@ -1891,7 +1864,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:71",
+      "sourceKey": "PLACE:70",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 계림",
@@ -1918,7 +1891,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:72",
+      "sourceKey": "PLACE:71",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "월정교",
@@ -1945,7 +1918,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:73",
+      "sourceKey": "PLACE:72",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "감포항",
@@ -1972,7 +1945,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:74",
+      "sourceKey": "PLACE:73",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "국민힐링파크",
@@ -1999,7 +1972,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:75",
+      "sourceKey": "PLACE:74",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "화랑의언덕",
@@ -2026,7 +1999,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:76",
+      "sourceKey": "PLACE:75",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 서출지",
@@ -2053,7 +2026,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:77",
+      "sourceKey": "PLACE:76",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주엑스포대공원",
@@ -2080,7 +2053,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:78",
+      "sourceKey": "PLACE:77",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "보문정(경주)",
@@ -2107,7 +2080,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:79",
+      "sourceKey": "PLACE:78",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "신라왕경숲",
@@ -2134,7 +2107,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:80",
+      "sourceKey": "PLACE:79",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주읍성",
@@ -2161,7 +2134,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:81",
+      "sourceKey": "PLACE:80",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 첨성대",
@@ -2188,7 +2161,7 @@
       "petSafetyInfo": null
     },
     {
-      "sourceKey": "PLACE:82",
+      "sourceKey": "PLACE:81",
       "category": "ATTRACTION",
       "originalCategory": "관광지",
       "name": "경주 문무대왕릉",

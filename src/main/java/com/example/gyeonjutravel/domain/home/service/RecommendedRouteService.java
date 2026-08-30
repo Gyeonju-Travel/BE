@@ -5,6 +5,7 @@ import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
+import com.example.gyeonjutravel.domain.place.service.ClosedPlaces;
 import com.example.gyeonjutravel.domain.home.dto.request.RecommendedRouteRequest;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteJobResponse;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRoutePlaceResponse;
@@ -204,6 +205,7 @@ public class RecommendedRouteService {
 
     private List<Place> placesNearDeparture(List<Place> places, DepartureArea departureArea) {
         return places.stream()
+                .filter(ClosedPlaces::isOpen)
                 .filter(place -> distanceMeters(
                         departureArea.getLongitude(),
                         departureArea.getLatitude(),

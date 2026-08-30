@@ -52,6 +52,9 @@ public class PlaceService {
     public PlaceDetailResponse getDetail(Long placeId) {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND));
+        if (!ClosedPlaces.isOpen(place)) {
+            throw new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND);
+        }
         return PlaceDetailResponse.from(place);
     }
 
@@ -76,6 +79,7 @@ public class PlaceService {
                 );
         return bookmarks
                 .stream()
+                .filter(ClosedPlaces::isOpen)
                 .map(MapPlaceResponse::from)
                 .toList();
     }
@@ -103,6 +107,7 @@ public class PlaceService {
             if (categories != null && !categories.isEmpty()) {
                 predicates.add(root.get("category").in(categories));
             }
+            predicates.add(criteriaBuilder.not(root.get("name").in(ClosedPlaces.NAMES)));
             if (keyword != null && !keyword.isBlank()) {
                 String pattern = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
                 predicates.add(criteriaBuilder.or(
@@ -128,8 +133,12 @@ public class PlaceService {
     }
 
     private Place findPlace(Long placeId) {
-        return placeRepository.findById(placeId)
+        Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND));
+        if (!ClosedPlaces.isOpen(place)) {
+            throw new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND);
+        }
+        return place;
     }
 
 }
