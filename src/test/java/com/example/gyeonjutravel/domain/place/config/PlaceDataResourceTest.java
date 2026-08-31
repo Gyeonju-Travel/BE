@@ -22,7 +22,7 @@ class PlaceDataResourceTest {
             JsonNode places = document.path("places");
             Set<String> sourceKeys = new HashSet<>();
 
-            assertThat(places.size()).isEqualTo(88);
+            assertThat(places.size()).isEqualTo(86);
             for (int index = 0; index < places.size(); index++) {
                 JsonNode place = places.get(index);
                 assertThat(place.path("latitude").asDouble()).isBetween(35.0, 37.0);

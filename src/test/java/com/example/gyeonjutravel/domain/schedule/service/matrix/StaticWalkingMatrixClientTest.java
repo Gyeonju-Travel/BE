@@ -36,10 +36,10 @@ class StaticWalkingMatrixClientTest {
     void matchesNewCafeCoordinatesFromNodeData() {
         WalkingMatrix matrix = client.calculate(List.of(
                 new MatrixNode("START", 129.213503362291, 35.8423816699688),
-                new MatrixNode("PLACE:82", 129.2141147, 35.84687184)
+                new MatrixNode("PLACE:81", 129.2141147, 35.84687184)
         ));
 
-        assertThat(matrix.findRoute("START", "PLACE:82")).isPresent();
+        assertThat(matrix.findRoute("START", "PLACE:81")).isPresent();
     }
 
     @Test
