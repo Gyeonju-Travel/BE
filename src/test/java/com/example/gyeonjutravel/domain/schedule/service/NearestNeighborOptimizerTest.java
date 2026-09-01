@@ -31,6 +31,22 @@ class NearestNeighborOptimizerTest {
         assertThat(result).containsExactly(1L, 2L, 4L, 5L, 3L);
     }
 
+    @Test
+    void placesUnavailableWalkingNodesLast() {
+        WalkingMatrix matrix = new WalkingMatrix(
+                List.of("START", "PLACE:1", "PLACE:2"),
+                List.of(
+                        new WalkingRoute("START", "PLACE:1", 300L, 350L),
+                        new WalkingRoute("START", "PLACE:2", null, null),
+                        new WalkingRoute("PLACE:1", "PLACE:2", null, null),
+                        new WalkingRoute("PLACE:2", "PLACE:1", null, null)
+                )
+        );
+
+        assertThat(optimizer.optimize(List.of(2L, 1L), matrix))
+                .containsExactly(1L, 2L);
+    }
+
     private WalkingMatrix matrix(List<Long> placeIds, List<Long> shortestOrder) {
         List<String> nodeKeys = new ArrayList<>();
         nodeKeys.add(ScheduleMatrixCache.START_NODE_KEY);

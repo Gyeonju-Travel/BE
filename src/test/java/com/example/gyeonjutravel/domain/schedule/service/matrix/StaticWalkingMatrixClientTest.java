@@ -26,10 +26,10 @@ class StaticWalkingMatrixClientTest {
 
         assertThat(matrix.findRoute("START", "PLACE:1")).get()
                 .extracting(WalkingRoute::durationSeconds, WalkingRoute::distanceMeters)
-                .containsExactly(240L, 268L);
+                .containsExactly(180L, 186L);
         assertThat(matrix.findRoute("PLACE:1", "START")).get()
                 .extracting(WalkingRoute::durationSeconds, WalkingRoute::distanceMeters)
-                .containsExactly(240L, 268L);
+                .containsExactly(180L, 186L);
     }
 
     @Test
@@ -40,6 +40,28 @@ class StaticWalkingMatrixClientTest {
         ));
 
         assertThat(matrix.findRoute("START", "PLACE:81")).isPresent();
+    }
+
+    @Test
+    void reportsOnlyWalkablePlaceNodesAsWalkable() {
+        assertThat(client.isWalkable(new MatrixNode(
+                "PLACE:46",
+                129.2082768,
+                35.83730468
+        ))).isTrue();
+        assertThat(client.isWalkable(new MatrixNode(
+                "PLACE:77",
+                129.4749,
+                35.6899
+        ))).isFalse();
+
+        WalkingMatrix matrix = client.calculate(List.of(
+                new MatrixNode("START", 129.20995370588062, 35.83740829748873),
+                new MatrixNode("PLACE:77", 129.4749, 35.6899)
+        ));
+        assertThat(matrix.findRoute("START", "PLACE:77")).get()
+                .extracting(WalkingRoute::durationSeconds, WalkingRoute::distanceMeters)
+                .containsExactly(null, null);
     }
 
     @Test
@@ -56,12 +78,15 @@ class StaticWalkingMatrixClientTest {
                             columns[0],
                             "출발지".equals(columns[2]),
                             Double.parseDouble(columns[3]),
-                            Double.parseDouble(columns[4])
+                            Double.parseDouble(columns[4]),
+                            "Y".equalsIgnoreCase(columns[5])
                     ))
                     .toList();
         }
 
-        List<TestNode> placeNodes = dataNodes.stream().filter(node -> !node.departure()).toList();
+        List<TestNode> placeNodes = dataNodes.stream()
+                .filter(node -> !node.departure() && node.walkable())
+                .toList();
         for (TestNode departure : dataNodes.stream().filter(TestNode::departure).toList()) {
             List<MatrixNode> requestedNodes = new ArrayList<>();
             requestedNodes.add(new MatrixNode("START", departure.longitude(), departure.latitude()));
@@ -77,6 +102,6 @@ class StaticWalkingMatrixClientTest {
         }
     }
 
-    private record TestNode(String id, boolean departure, double longitude, double latitude) {
+    private record TestNode(String id, boolean departure, double longitude, double latitude, boolean walkable) {
     }
 }
