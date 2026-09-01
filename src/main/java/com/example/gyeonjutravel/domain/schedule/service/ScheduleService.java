@@ -88,9 +88,7 @@ public class ScheduleService {
         for (int index = 0; index < recommendedOrder.size(); index++) {
             Long placeId = recommendedOrder.get(index);
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
-            WalkingRoute route = matrixPreview.matrix()
-                    .findRoute(previousNodeKey, placeNodeKey)
-                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            WalkingRoute route = requireWalkableRoute(matrixPreview.matrix(), previousNodeKey, placeNodeKey);
             recommendedPlaces.add(SchedulePlaceResponse.preview(
                     index + 1,
                     placesById.get(placeId),
@@ -175,9 +173,11 @@ public class ScheduleService {
         for (int index = 0; index < request.orderedPlaceIds().size(); index++) {
             Long placeId = request.orderedPlaceIds().get(index);
             Place place = placesById.get(placeId);
-            WalkingRoute route = preview.matrix()
-                    .findRoute(previousNodeKey, ScheduleMatrixCache.placeNodeKey(placeId))
-                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            WalkingRoute route = requireWalkableRoute(
+                    preview.matrix(),
+                    previousNodeKey,
+                    ScheduleMatrixCache.placeNodeKey(placeId)
+            );
 
             schedule.addItem(
                     place,
@@ -351,9 +351,11 @@ public class ScheduleService {
         for (int index = 0; index < orderedPlaceIds.size(); index++) {
             Long placeId = orderedPlaceIds.get(index);
             Place place = placesById.get(placeId);
-            WalkingRoute route = preview.matrix()
-                    .findRoute(previousNodeKey, ScheduleMatrixCache.placeNodeKey(placeId))
-                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            WalkingRoute route = requireWalkableRoute(
+                    preview.matrix(),
+                    previousNodeKey,
+                    ScheduleMatrixCache.placeNodeKey(placeId)
+            );
             schedule.addItem(place, index + 1, route.durationSeconds(), route.distanceMeters());
             savedPlaces.add(SchedulePlaceResponse.saved(
                     index + 1, place, route.durationSeconds(), route.distanceMeters()
@@ -370,6 +372,15 @@ public class ScheduleService {
                 DepartureResponse.from(schedule.getDepartureArea()),
                 places
         );
+    }
+
+    private WalkingRoute requireWalkableRoute(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
+        WalkingRoute route = matrix.findRoute(fromNodeKey, toNodeKey)
+                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+        if (route.durationSeconds() == null || route.distanceMeters() == null) {
+            throw new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND);
+        }
+        return route;
     }
 
     private Map<Long, Place> indexPlaces(List<Place> places) {

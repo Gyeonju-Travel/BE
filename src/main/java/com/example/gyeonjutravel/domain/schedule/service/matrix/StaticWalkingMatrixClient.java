@@ -24,15 +24,14 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
 
     private static final String START_NODE_KEY = "START";
     private static final double NODE_MATCH_RADIUS_METERS = 30.0;
-    private static final long ESTIMATED_WALKING_METERS_PER_MINUTE = 67L;
     private static final double EARTH_RADIUS_METERS = 6_371_000.0;
 
     private final List<KnownNode> knownNodes;
-    private final Map<KnownRouteKey, Integer> walkingMinutes;
+    private final Map<KnownRouteKey, RouteData> walkingRoutes;
 
     public StaticWalkingMatrixClient() {
         this.knownNodes = loadNodes("data/walking-nodes.csv");
-        this.walkingMinutes = loadWalkingMinutes("data/walking-times.csv");
+        this.walkingRoutes = loadWalkingRoutes("data/walking-times.csv");
     }
 
     @Override
@@ -47,12 +46,12 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
                 if (fromIndex == toIndex) {
                     continue;
                 }
-                int minutes = findWalkingMinutes(matchedNodes.get(fromIndex), matchedNodes.get(toIndex));
+                RouteData route = findWalkingRoute(matchedNodes.get(fromIndex), matchedNodes.get(toIndex));
                 routes.add(new WalkingRoute(
                         nodes.get(fromIndex).key(),
                         nodes.get(toIndex).key(),
-                        minutes * 60L,
-                        minutes * ESTIMATED_WALKING_METERS_PER_MINUTE
+                        route.durationSeconds(),
+                        route.distanceMeters()
                 ));
             }
         }
@@ -60,10 +59,23 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
         return new WalkingMatrix(nodes.stream().map(MatrixNode::key).toList(), routes);
     }
 
+    @Override
+    public boolean isWalkable(MatrixNode requestedNode) {
+        boolean departure = START_NODE_KEY.equals(requestedNode.key());
+        return knownNodes.stream()
+                .filter(node -> node.departure() == departure && node.walkable())
+                .anyMatch(node -> distanceMeters(
+                        requestedNode.longitude(),
+                        requestedNode.latitude(),
+                        node.longitude(),
+                        node.latitude()
+                ) <= NODE_MATCH_RADIUS_METERS);
+    }
+
     private KnownNode matchKnownNode(MatrixNode requestedNode) {
         boolean departure = START_NODE_KEY.equals(requestedNode.key());
         return knownNodes.stream()
-                .filter(node -> node.departure() == departure)
+                .filter(node -> node.departure() == departure && node.walkable())
                 .map(node -> new NodeDistance(
                         node,
                         distanceMeters(
@@ -79,44 +91,44 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
                 .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
     }
 
-    private int findWalkingMinutes(KnownNode from, KnownNode to) {
+    private RouteData findWalkingRoute(KnownNode from, KnownNode to) {
         if (from.id().equals(to.id())) {
-            return 0;
+            return new RouteData(0L, 0L);
         }
-        Integer minutes = walkingMinutes.get(KnownRouteKey.of(from.id(), to.id()));
-        if (minutes == null) {
-            throw new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND);
-        }
-        return minutes;
+        return walkingRoutes.getOrDefault(KnownRouteKey.of(from.id(), to.id()), RouteData.unavailable());
     }
 
     private List<KnownNode> loadNodes(String resourcePath) {
         List<KnownNode> nodes = new ArrayList<>();
         for (String line : readDataLines(resourcePath)) {
             String[] columns = line.split(",", -1);
-            if (columns.length != 5) {
+            if (columns.length != 6) {
                 throw invalidResource(resourcePath);
             }
             nodes.add(new KnownNode(
                     columns[0],
                     "출발지".equals(columns[2]),
                     parseDouble(columns[3], resourcePath),
-                    parseDouble(columns[4], resourcePath)
+                    parseDouble(columns[4], resourcePath),
+                    "Y".equalsIgnoreCase(columns[5])
             ));
         }
         return List.copyOf(nodes);
     }
 
-    private Map<KnownRouteKey, Integer> loadWalkingMinutes(String resourcePath) {
-        Map<KnownRouteKey, Integer> routes = new HashMap<>();
+    private Map<KnownRouteKey, RouteData> loadWalkingRoutes(String resourcePath) {
+        Map<KnownRouteKey, RouteData> routes = new HashMap<>();
         for (String line : readDataLines(resourcePath)) {
             String[] columns = line.split(",", -1);
-            if (columns.length != 5) {
+            if (columns.length != 6) {
                 throw invalidResource(resourcePath);
             }
             KnownRouteKey key = KnownRouteKey.of(columns[0], columns[2]);
-            Integer previous = routes.put(key, parseInteger(columns[4], resourcePath));
-            if (previous != null) {
+            RouteData previous = routes.put(
+                    key,
+                    parseRouteData(columns[4], columns[5], resourcePath)
+            );
+            if (previous != null && !previous.equals(RouteData.unavailable())) {
                 throw invalidResource(resourcePath);
             }
         }
@@ -143,9 +155,16 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
         }
     }
 
-    private int parseInteger(String value, String resourcePath) {
+    private RouteData parseRouteData(String walkingMinutes, String distanceMeters, String resourcePath) {
+        if (walkingMinutes.isBlank() || distanceMeters.isBlank()) {
+            return RouteData.unavailable();
+        }
+        return new RouteData(parseLong(walkingMinutes, resourcePath) * 60L, parseLong(distanceMeters, resourcePath));
+    }
+
+    private long parseLong(String value, String resourcePath) {
         try {
-            return Integer.parseInt(value);
+            return Long.parseLong(value);
         } catch (NumberFormatException exception) {
             throw invalidResource(resourcePath, exception);
         }
@@ -171,7 +190,7 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
         return EARTH_RADIUS_METERS * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    private record KnownNode(String id, boolean departure, double longitude, double latitude) {
+    private record KnownNode(String id, boolean departure, double longitude, double latitude, boolean walkable) {
     }
 
     private record NodeDistance(KnownNode node, double distanceMeters) {
@@ -183,6 +202,12 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
                 return new KnownRouteKey(firstNodeId, secondNodeId);
             }
             return new KnownRouteKey(secondNodeId, firstNodeId);
+        }
+    }
+
+    private record RouteData(Long durationSeconds, Long distanceMeters) {
+        private static RouteData unavailable() {
+            return new RouteData(null, null);
         }
     }
 }

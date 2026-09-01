@@ -17,8 +17,8 @@ public record SchedulePlaceResponse(
     public static SchedulePlaceResponse preview(
             int visitOrder,
             Place place,
-            long walkingDurationSeconds,
-            long walkingDistanceMeters
+            Long walkingDurationSeconds,
+            Long walkingDistanceMeters
     ) {
         return new SchedulePlaceResponse(
                 visitOrder,
@@ -37,8 +37,8 @@ public record SchedulePlaceResponse(
     public static SchedulePlaceResponse saved(
             int visitOrder,
             Place place,
-            long walkingDurationSeconds,
-            long walkingDistanceMeters
+            Long walkingDurationSeconds,
+            Long walkingDistanceMeters
     ) {
         return new SchedulePlaceResponse(
                 visitOrder,

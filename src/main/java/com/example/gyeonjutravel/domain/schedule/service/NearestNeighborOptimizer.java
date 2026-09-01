@@ -28,7 +28,7 @@ public class NearestNeighborOptimizer {
                                     matrix,
                                     fromNodeKey,
                                     ScheduleMatrixCache.placeNodeKey(placeId)
-                            ).durationSeconds())
+                            ))
                             .thenComparingLong(Long::longValue))
                     .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
 
@@ -95,14 +95,18 @@ public class NearestNeighborOptimizer {
         String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
         for (Long placeId : placeIds) {
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
-            totalDurationSeconds += route(matrix, previousNodeKey, placeNodeKey).durationSeconds();
+            totalDurationSeconds += route(matrix, previousNodeKey, placeNodeKey);
             previousNodeKey = placeNodeKey;
         }
         return totalDurationSeconds;
     }
 
-    private WalkingRoute route(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
-        return matrix.findRoute(fromNodeKey, toNodeKey)
+    private long route(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
+        WalkingRoute route = matrix.findRoute(fromNodeKey, toNodeKey)
                 .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+        if (route.durationSeconds() == null) {
+            throw new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND);
+        }
+        return route.durationSeconds();
     }
 }
