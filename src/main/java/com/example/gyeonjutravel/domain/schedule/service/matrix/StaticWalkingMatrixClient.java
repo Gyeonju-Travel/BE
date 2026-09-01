@@ -75,7 +75,7 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
     private KnownNode matchKnownNode(MatrixNode requestedNode) {
         boolean departure = START_NODE_KEY.equals(requestedNode.key());
         return knownNodes.stream()
-                .filter(node -> node.departure() == departure && node.walkable())
+                .filter(node -> node.departure() == departure)
                 .map(node -> new NodeDistance(
                         node,
                         distanceMeters(

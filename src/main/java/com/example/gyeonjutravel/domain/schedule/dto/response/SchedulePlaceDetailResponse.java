@@ -12,8 +12,8 @@ public record SchedulePlaceDetailResponse(
         String imageUrl,
         String petAccessType,
         String petRequirements,
-        long walkingDurationSeconds,
-        long walkingDistanceMeters,
+        Long walkingDurationSeconds,
+        Long walkingDistanceMeters,
         double longitude,
         double latitude
 ) {

@@ -88,7 +88,7 @@ public class ScheduleService {
         for (int index = 0; index < recommendedOrder.size(); index++) {
             Long placeId = recommendedOrder.get(index);
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
-            WalkingRoute route = requireWalkableRoute(matrixPreview.matrix(), previousNodeKey, placeNodeKey);
+            WalkingRoute route = findRoute(matrixPreview.matrix(), previousNodeKey, placeNodeKey);
             recommendedPlaces.add(SchedulePlaceResponse.preview(
                     index + 1,
                     placesById.get(placeId),
@@ -173,7 +173,7 @@ public class ScheduleService {
         for (int index = 0; index < request.orderedPlaceIds().size(); index++) {
             Long placeId = request.orderedPlaceIds().get(index);
             Place place = placesById.get(placeId);
-            WalkingRoute route = requireWalkableRoute(
+            WalkingRoute route = findRoute(
                     preview.matrix(),
                     previousNodeKey,
                     ScheduleMatrixCache.placeNodeKey(placeId)
@@ -218,7 +218,9 @@ public class ScheduleService {
         Map<Long, Place> placesById = indexPlaces(places);
 
         Schedule schedule = new Schedule(member, preview.date(), preview.departureArea());
-        List<SchedulePlaceResponse> savedPlaces = addItems(schedule, request.orderedPlaceIds(), placesById, preview);
+        List<SchedulePlaceResponse> savedPlaces = addItems(
+                schedule, request.orderedPlaceIds(), placesById, preview, true
+        );
         Schedule savedSchedule = scheduleRepository.save(schedule);
         scheduleMatrixCache.consumePreview(request.matrixToken());
         return new ScheduleResponse(
@@ -241,7 +243,9 @@ public class ScheduleService {
         schedule.updateDate(preview.date());
         schedule.updateRoute(preview.departureArea());
         scheduleRepository.flush();
-        List<SchedulePlaceResponse> savedPlaces = addItems(schedule, request.orderedPlaceIds(), placesById, preview);
+        List<SchedulePlaceResponse> savedPlaces = addItems(
+                schedule, request.orderedPlaceIds(), placesById, preview, false
+        );
 
         scheduleMatrixCache.consumePreview(request.matrixToken());
         return toResponse(schedule, savedPlaces);
@@ -344,23 +348,23 @@ public class ScheduleService {
             Schedule schedule,
             List<Long> orderedPlaceIds,
             Map<Long, Place> placesById,
-            SchedulePreview preview
+            SchedulePreview preview,
+            boolean requireWalkable
     ) {
         List<SchedulePlaceResponse> savedPlaces = new ArrayList<>();
         String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
         for (int index = 0; index < orderedPlaceIds.size(); index++) {
             Long placeId = orderedPlaceIds.get(index);
             Place place = placesById.get(placeId);
-            WalkingRoute route = requireWalkableRoute(
-                    preview.matrix(),
-                    previousNodeKey,
-                    ScheduleMatrixCache.placeNodeKey(placeId)
-            );
+            String placeNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
+            WalkingRoute route = requireWalkable
+                    ? requireWalkableRoute(preview.matrix(), previousNodeKey, placeNodeKey)
+                    : findRoute(preview.matrix(), previousNodeKey, placeNodeKey);
             schedule.addItem(place, index + 1, route.durationSeconds(), route.distanceMeters());
             savedPlaces.add(SchedulePlaceResponse.saved(
                     index + 1, place, route.durationSeconds(), route.distanceMeters()
             ));
-            previousNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
+            previousNodeKey = placeNodeKey;
         }
         return savedPlaces;
     }
@@ -375,12 +379,16 @@ public class ScheduleService {
     }
 
     private WalkingRoute requireWalkableRoute(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
-        WalkingRoute route = matrix.findRoute(fromNodeKey, toNodeKey)
-                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+        WalkingRoute route = findRoute(matrix, fromNodeKey, toNodeKey);
         if (route.durationSeconds() == null || route.distanceMeters() == null) {
             throw new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND);
         }
         return route;
+    }
+
+    private WalkingRoute findRoute(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
+        return matrix.findRoute(fromNodeKey, toNodeKey)
+                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
     }
 
     private Map<Long, Place> indexPlaces(List<Place> places) {

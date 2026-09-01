@@ -21,7 +21,9 @@ public record TravelRecordItemResponse(
                 .sorted(Comparator.comparingInt(ScheduleItem::getVisitOrder))
                 .toList();
         long totalWalkingDurationSeconds = orderedItems.stream()
-                .mapToLong(ScheduleItem::getWalkingDurationSeconds)
+                .map(ScheduleItem::getWalkingDurationSeconds)
+                .filter(java.util.Objects::nonNull)
+                .mapToLong(Long::longValue)
                 .sum();
         return new TravelRecordItemResponse(
                 schedule.getId(),

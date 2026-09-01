@@ -24,7 +24,7 @@ public class NearestNeighborOptimizer {
             String fromNodeKey = currentNodeKey;
             Long nextPlaceId = unvisited.stream()
                     .min(Comparator
-                            .comparingLong((Long placeId) -> route(
+                            .comparingLong((Long placeId) -> sortableDuration(
                                     matrix,
                                     fromNodeKey,
                                     ScheduleMatrixCache.placeNodeKey(placeId)
@@ -95,18 +95,28 @@ public class NearestNeighborOptimizer {
         String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
         for (Long placeId : placeIds) {
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(placeId);
-            totalDurationSeconds += route(matrix, previousNodeKey, placeNodeKey);
+            totalDurationSeconds += requireDuration(matrix, previousNodeKey, placeNodeKey);
             previousNodeKey = placeNodeKey;
         }
         return totalDurationSeconds;
     }
 
-    private long route(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
-        WalkingRoute route = matrix.findRoute(fromNodeKey, toNodeKey)
-                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+    private long sortableDuration(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
+        WalkingRoute route = findRoute(matrix, fromNodeKey, toNodeKey);
+        return route.durationSeconds() == null ? Long.MAX_VALUE : route.durationSeconds();
+    }
+
+    private long requireDuration(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
+        WalkingRoute route = findRoute(matrix, fromNodeKey, toNodeKey);
         if (route.durationSeconds() == null) {
             throw new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND);
         }
         return route.durationSeconds();
+    }
+
+    private WalkingRoute findRoute(WalkingMatrix matrix, String fromNodeKey, String toNodeKey) {
+        WalkingRoute route = matrix.findRoute(fromNodeKey, toNodeKey)
+                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+        return route;
     }
 }

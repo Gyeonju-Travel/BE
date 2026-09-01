@@ -43,18 +43,18 @@ public class ScheduleItem extends BaseEntity {
     @Column(name = "visit_order", nullable = false)
     private int visitOrder;
 
-    @Column(name = "walking_duration_seconds", nullable = false)
-    private long walkingDurationSeconds;
+    @Column(name = "walking_duration_seconds")
+    private Long walkingDurationSeconds;
 
-    @Column(name = "walking_distance_meters", nullable = false)
-    private long walkingDistanceMeters;
+    @Column(name = "walking_distance_meters")
+    private Long walkingDistanceMeters;
 
     ScheduleItem(
             Schedule schedule,
             Place place,
             int visitOrder,
-            long walkingDurationSeconds,
-            long walkingDistanceMeters
+            Long walkingDurationSeconds,
+            Long walkingDistanceMeters
     ) {
         this.schedule = schedule;
         this.place = place;
