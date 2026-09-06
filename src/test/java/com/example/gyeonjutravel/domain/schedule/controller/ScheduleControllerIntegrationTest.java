@@ -179,6 +179,80 @@ class ScheduleControllerIntegrationTest {
     }
 
     @Test
+    void previewPlacesUnavailableWalkingPlaceLastButSavePreservesRequestedOrder() throws Exception {
+        Member member = saveMember();
+        Place walkable = savePlace("SCHEDULE:WALKABLE", "도보 가능 장소", 129.2100, 35.8370);
+        Place unavailable = savePlace("SCHEDULE:UNAVAILABLE", "파도소리길", 129.4749, 35.6899);
+        member.addBookmark(walkable);
+        member.addBookmark(unavailable);
+        memberRepository.flush();
+
+        when(walkingMatrixClient.calculate(anyList()))
+                .thenAnswer(invocation -> matrixWithUnavailablePlace(
+                        invocation.getArgument(0), unavailable.getId()
+                ));
+
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        MvcResult previewResult = mockMvc.perform(post("/api/schedules/preview")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "departureArea": "HWANGRIDAN_GIL",
+                                  "date": "%s",
+                                  "placeIds": [%d, %d]
+                                }
+                                """.formatted(
+                                LocalDate.now().plusDays(1),
+                                unavailable.getId(),
+                                walkable.getId()
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.recommendedPlaces[0].placeId").value(walkable.getId()))
+                .andExpect(jsonPath("$.result.recommendedPlaces[1].placeId").value(unavailable.getId()))
+                .andExpect(jsonPath("$.result.recommendedPlaces[1].walkingDurationSeconds").isEmpty())
+                .andExpect(jsonPath("$.result.recommendedPlaces[1].walkingDistanceMeters").isEmpty())
+                .andReturn();
+
+        String matrixToken = objectMapper.readTree(previewResult.getResponse().getContentAsString())
+                .path("result")
+                .path("matrixToken")
+                .asText();
+
+        MvcResult createResult = mockMvc.perform(post("/api/schedules")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "matrixToken": "%s",
+                                  "orderedPlaceIds": [%d, %d]
+                                }
+                                """.formatted(matrixToken, unavailable.getId(), walkable.getId())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.result.places[0].placeId").value(unavailable.getId()))
+                .andExpect(jsonPath("$.result.places[0].walkingDurationSeconds").isEmpty())
+                .andExpect(jsonPath("$.result.places[0].walkingDistanceMeters").isEmpty())
+                .andExpect(jsonPath("$.result.places[1].placeId").value(walkable.getId()))
+                .andExpect(jsonPath("$.result.places[1].walkingDurationSeconds").isEmpty())
+                .andExpect(jsonPath("$.result.places[1].walkingDistanceMeters").isEmpty())
+                .andReturn();
+
+        long scheduleId = objectMapper.readTree(createResult.getResponse().getContentAsString())
+                .path("result")
+                .path("scheduleId")
+                .asLong();
+        Schedule savedSchedule = scheduleRepository.findById(scheduleId).orElseThrow();
+        assertThat(savedSchedule.getItems())
+                .extracting(item -> item.getPlace().getId())
+                .containsExactly(unavailable.getId(), walkable.getId());
+        assertThat(savedSchedule.getItems())
+                .allSatisfy(item -> {
+                    assertThat(item.getWalkingDurationSeconds()).isNull();
+                    assertThat(item.getWalkingDistanceMeters()).isNull();
+                });
+    }
+
+    @Test
     void memberCanPreviewAllChangesAndReplaceRoute() throws Exception {
         Member member = saveMember();
         Place oldPlace = savePlace("SCHEDULE:UPDATE:OLD", "기존 장소", 129.2100, 35.8370);
@@ -437,6 +511,27 @@ class ScheduleControllerIntegrationTest {
                         destination.key(),
                         duration,
                         duration + 50
+                ));
+            }
+        }
+        return new WalkingMatrix(nodes.stream().map(MatrixNode::key).toList(), routes);
+    }
+
+    private WalkingMatrix matrixWithUnavailablePlace(List<MatrixNode> nodes, Long unavailablePlaceId) {
+        String unavailableNodeKey = ScheduleMatrixCache.placeNodeKey(unavailablePlaceId);
+        List<WalkingRoute> routes = new ArrayList<>();
+        for (MatrixNode origin : nodes) {
+            for (MatrixNode destination : nodes) {
+                if (origin.key().equals(destination.key())) {
+                    continue;
+                }
+                boolean unavailable = origin.key().equals(unavailableNodeKey)
+                        || destination.key().equals(unavailableNodeKey);
+                routes.add(new WalkingRoute(
+                        origin.key(),
+                        destination.key(),
+                        unavailable ? null : 300L,
+                        unavailable ? null : 350L
                 ));
             }
         }

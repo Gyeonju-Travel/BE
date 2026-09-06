@@ -5,6 +5,8 @@ import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
+import com.example.gyeonjutravel.domain.place.service.ClosedPlaces;
+import com.example.gyeonjutravel.domain.place.service.MapOnlyPlaces;
 import com.example.gyeonjutravel.domain.home.dto.request.RecommendedRouteRequest;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRouteJobResponse;
 import com.example.gyeonjutravel.domain.home.dto.response.RecommendedRoutePlaceResponse;
@@ -204,6 +206,13 @@ public class RecommendedRouteService {
 
     private List<Place> placesNearDeparture(List<Place> places, DepartureArea departureArea) {
         return places.stream()
+                .filter(ClosedPlaces::isOpen)
+                .filter(place -> !MapOnlyPlaces.isMapOnly(place))
+                .filter(place -> scheduleMatrixCache.isWalkable(new PlaceCoordinate(
+                        place.getId(),
+                        place.getLongitude(),
+                        place.getLatitude()
+                )))
                 .filter(place -> distanceMeters(
                         departureArea.getLongitude(),
                         departureArea.getLatitude(),
@@ -217,9 +226,7 @@ public class RecommendedRouteService {
         String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
         for (Place place : recommendedPlaces) {
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(place.getId());
-            WalkingRoute route = matrixPreview.matrix()
-                    .findRoute(previousNodeKey, placeNodeKey)
-                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            WalkingRoute route = requireWalkableRoute(matrixPreview, previousNodeKey, placeNodeKey);
             if (route.durationSeconds() > MAX_ROUTE_SEGMENT_DURATION_SECONDS) {
                 throw new GeneralException(RecommendedRouteErrorCode.RECOMMENDED_ROUTE_TOO_FAR);
             }
@@ -487,9 +494,7 @@ public class RecommendedRouteService {
         for (int index = 0; index < recommendedPlaces.size(); index++) {
             Place place = recommendedPlaces.get(index);
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(place.getId());
-            WalkingRoute route = matrixPreview.matrix()
-                    .findRoute(previousNodeKey, placeNodeKey)
-                    .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+            WalkingRoute route = requireWalkableRoute(matrixPreview, previousNodeKey, placeNodeKey);
 
             places.add(RecommendedRoutePlaceResponse.of(
                     index + 1,
@@ -508,6 +513,16 @@ public class RecommendedRouteService {
                 placeIds,
                 places
         );
+    }
+
+    private WalkingRoute requireWalkableRoute(MatrixPreview matrixPreview, String fromNodeKey, String toNodeKey) {
+        WalkingRoute route = matrixPreview.matrix()
+                .findRoute(fromNodeKey, toNodeKey)
+                .orElseThrow(() -> new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND));
+        if (route.durationSeconds() == null || route.distanceMeters() == null) {
+            throw new GeneralException(ScheduleErrorCode.WALKING_ROUTE_NOT_FOUND);
+        }
+        return route;
     }
 
     @PreDestroy

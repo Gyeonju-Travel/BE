@@ -11,9 +11,7 @@ public enum ScheduleErrorCode implements BaseErrorCode {
     PREVIEW_DEPARTURE_MISMATCH(HttpStatus.BAD_REQUEST, "SCHEDULE_400_5", "미리보기와 출발지가 일치하지 않습니다."),
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SCHEDULE_404_1", "일정을 찾을 수 없습니다."),
     PREVIEW_EXPIRED(HttpStatus.GONE, "SCHEDULE_410_1", "일정 미리보기가 만료되었습니다. 다시 계산해주세요."),
-    WALKING_ROUTE_NOT_FOUND(HttpStatus.UNPROCESSABLE_ENTITY, "SCHEDULE_422_1", "선택한 장소 사이의 도보 경로를 찾을 수 없습니다."),
-    TMAP_NOT_CONFIGURED(HttpStatus.SERVICE_UNAVAILABLE, "SCHEDULE_503_1", "TMAP API 키가 설정되지 않았습니다."),
-    TMAP_REQUEST_FAILED(HttpStatus.BAD_GATEWAY, "SCHEDULE_502_1", "TMAP 도보 경로 계산에 실패했습니다.");
+    WALKING_ROUTE_NOT_FOUND(HttpStatus.UNPROCESSABLE_ENTITY, "SCHEDULE_422_1", "선택한 장소 사이의 도보 경로를 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;
