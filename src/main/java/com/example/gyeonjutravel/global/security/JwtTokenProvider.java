@@ -80,6 +80,10 @@ public class JwtTokenProvider {
         return ACCESS_TOKEN_TYPE.equals(parseClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
     }
 
+    public boolean isValidRefreshToken(String token) {
+        return REFRESH_TOKEN_TYPE.equals(parseClaims(token).get(TOKEN_TYPE_CLAIM, String.class));
+    }
+
     private Claims parseClaims(String token) {
         try {
             return Jwts.parser()

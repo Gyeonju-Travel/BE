@@ -8,16 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface PlaceReportRepository extends JpaRepository<PlaceReport, Long> {
 
-    @Modifying
-    @Query(value = """
-            delete from place_report_pet_policies
-            where place_report_id in (
-                select id from place_reports where member_id = :memberId
-            )
-            """, nativeQuery = true)
-    void deletePetPoliciesByMemberId(@Param("memberId") Long memberId);
-
-    @Modifying
-    @Query(value = "delete from place_reports where member_id = :memberId", nativeQuery = true)
-    void deleteAllByMemberId(@Param("memberId") Long memberId);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = "update place_reports set member_id = null where member_id = :memberId", nativeQuery = true)
+    void anonymizeMemberByMemberId(@Param("memberId") Long memberId);
 }

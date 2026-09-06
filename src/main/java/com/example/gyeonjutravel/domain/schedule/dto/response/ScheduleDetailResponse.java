@@ -4,20 +4,25 @@ import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
 public record ScheduleDetailResponse(
         Long scheduleId,
         LocalDate date,
+        boolean started,
+        LocalDateTime startedAt,
+        boolean ended,
+        LocalDateTime endedAt,
         DepartureResponse departure,
         String lastPlaceName,
         int totalPlaceCount,
         long totalWalkingDurationSeconds,
-        List<SchedulePlaceDetailResponse> places,
-        boolean started,
-        LocalDateTime startedAt
+        List<SchedulePlaceDetailResponse> places
 ) {
+    private static final LocalTime OFFICIAL_END_TIME = LocalTime.of(21, 0);
+
     public static ScheduleDetailResponse from(Schedule schedule) {
         List<SchedulePlaceDetailResponse> places = schedule.getItems().stream()
                 .map(SchedulePlaceDetailResponse::from)
@@ -29,16 +34,22 @@ public record ScheduleDetailResponse(
                 .max(Comparator.comparingInt(item -> item.getVisitOrder()))
                 .map(item -> item.getPlace().getName())
                 .orElse(null);
+        LocalDateTime officialEndAt = schedule.getTravelDate().atTime(OFFICIAL_END_TIME);
+        boolean ended = schedule.isStarted()
+                && schedule.getStartedAt() != null
+                && !LocalDateTime.now().isBefore(officialEndAt);
         return new ScheduleDetailResponse(
                 schedule.getId(),
                 schedule.getTravelDate(),
+                schedule.isStarted(),
+                schedule.getStartedAt(),
+                ended,
+                ended ? officialEndAt : null,
                 DepartureResponse.from(schedule.getDepartureArea()),
                 lastPlaceName,
                 places.size(),
                 totalWalkingDurationSeconds,
-                places,
-                schedule.isStarted(),
-                schedule.getStartedAt()
+                places
         );
     }
 }

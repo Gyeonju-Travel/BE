@@ -10,11 +10,15 @@ public record MapPlaceResponse(
         String categoryLabel,
         String detailCategory,
         String roadAddress,
+        String businessHours,
+        String breakTime,
+        String closedDays,
         Double longitude,
         Double latitude,
         String imageUrl,
         String petAccessType,
-        String petRequirements
+        String petRequirements,
+        String petInfo
 ) {
     public static MapPlaceResponse from(Place place) {
         return new MapPlaceResponse(
@@ -24,11 +28,15 @@ public record MapPlaceResponse(
                 place.getCategory().getLabel(),
                 place.getDetailCategory(),
                 place.getRoadAddress(),
+                place.getBusinessHours(),
+                place.getBreakTime(),
+                place.getClosedDays(),
                 place.getLongitude(),
                 place.getLatitude(),
                 place.getImageUrl(),
                 place.getPetAccessType(),
-                place.getPetRequirements()
+                place.getPetRequirements(),
+                place.getPetInfo()
         );
     }
 }

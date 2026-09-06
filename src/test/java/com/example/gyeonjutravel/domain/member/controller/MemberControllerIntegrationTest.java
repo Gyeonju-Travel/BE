@@ -178,6 +178,90 @@ class MemberControllerIntegrationTest {
     }
 
     @Test
+    void refreshTokenCanReissueAccessToken() throws Exception {
+        String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
+        mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "refresh@example.com",
+                                  "password": "password123!",
+                                  "passwordConfirmation": "password123!",
+                                  "name": "김견주",
+                                  "birthDate": "1995-04-12",
+                                  "gender": "FEMALE",
+                                  "phoneNumber": "010-1234-5678",
+                                  "termsAgreementToken": "%s"
+                                }
+                                """.formatted(termsAgreementToken)))
+                .andExpect(status().isOk());
+
+        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "refresh@example.com",
+                                  "password": "password123!"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.refreshToken").isNotEmpty())
+                .andReturn();
+        String refreshToken = objectMapper.readTree(loginResult.getResponse().getContentAsString())
+                .path("result")
+                .path("refreshToken")
+                .asText();
+
+        mockMvc.perform(post("/api/auth/token/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(refreshToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.result.refreshToken").value(refreshToken))
+                .andExpect(jsonPath("$.result.accessTokenExpiresIn").value(3600))
+                .andExpect(jsonPath("$.result.refreshTokenExpiresIn").value(1209600));
+    }
+
+    @Test
+    void refreshAccessTokenRejectsAccessToken() throws Exception {
+        String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
+        MvcResult signUpResult = mockMvc.perform(post("/api/auth/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "email": "refresh-access@example.com",
+                                  "password": "password123!",
+                                  "passwordConfirmation": "password123!",
+                                  "name": "김견주",
+                                  "birthDate": "1995-04-12",
+                                  "gender": "MALE",
+                                  "phoneNumber": "010-9876-5432",
+                                  "termsAgreementToken": "%s"
+                                }
+                                """.formatted(termsAgreementToken)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String accessToken = objectMapper.readTree(signUpResult.getResponse().getContentAsString())
+                .path("result")
+                .path("accessToken")
+                .asText();
+
+        mockMvc.perform(post("/api/auth/token/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "refreshToken": "%s"
+                                }
+                                """.formatted(accessToken)))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("MEMBER_401_3"));
+    }
+
+    @Test
     void memberCanCreateRetrieveAndUpdatePet() throws Exception {
         String termsAgreementToken = createTermsAgreementToken(true, true, true, true);
 

@@ -59,7 +59,7 @@ app:
     matrix-cache-ttl: ${SCHEDULE_MATRIX_CACHE_TTL:24h}
     preview-ttl: ${SCHEDULE_PREVIEW_TTL:30m}
   firebase:
-    credentials-path: ${FIREBASE_ADMIN_SDK_PATH:}
+    credentials-path: ${FIREBASE_ADMIN_SDK_FILE_PATH:${FIREBASE_ADMIN_SDK_PATH:}}
 
 tmap:
   base-url: ${TMAP_BASE_URL:https://apis.openapi.sk.com}

@@ -5,6 +5,7 @@ import com.example.gyeonjutravel.domain.notification.entity.Notification;
 import com.example.gyeonjutravel.domain.notification.repository.FcmTokenRepository;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.MessagingErrorCode;
 import com.google.firebase.messaging.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,14 @@ public class FcmPushService {
         } catch (FirebaseMessagingException exception) {
             log.warn("FCM 알림 발송에 실패했습니다. memberId={}, notificationId={}",
                     notification.getMember().getId(), notification.getId(), exception);
+            if (isInvalidToken(exception)) {
+                fcmTokenRepository.delete(token);
+            }
         }
+    }
+
+    private boolean isInvalidToken(FirebaseMessagingException exception) {
+        return exception.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED
+                || exception.getMessagingErrorCode() == MessagingErrorCode.INVALID_ARGUMENT;
     }
 }

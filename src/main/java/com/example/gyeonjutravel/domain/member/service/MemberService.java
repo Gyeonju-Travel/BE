@@ -6,9 +6,11 @@ import com.example.gyeonjutravel.domain.member.dto.request.MemberSignUpRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetCodeConfirmRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetRequest;
 import com.example.gyeonjutravel.domain.member.dto.request.PasswordResetVerificationRequest;
+import com.example.gyeonjutravel.domain.member.dto.request.TokenRefreshRequest;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberAuthResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.MemberSignUpResponse;
 import com.example.gyeonjutravel.domain.member.dto.response.PasswordResetVerificationResponse;
+import com.example.gyeonjutravel.domain.member.dto.response.TokenRefreshResponse;
 import com.example.gyeonjutravel.domain.member.entity.BlacklistedToken;
 import com.example.gyeonjutravel.domain.member.entity.Member;
 import com.example.gyeonjutravel.domain.member.entity.PasswordResetVerification;
@@ -18,9 +20,12 @@ import com.example.gyeonjutravel.domain.member.repository.MemberRepository;
 import com.example.gyeonjutravel.domain.member.repository.PasswordResetVerificationRepository;
 import com.example.gyeonjutravel.domain.notification.repository.NotificationRepository;
 import com.example.gyeonjutravel.domain.notification.repository.NotificationSettingRepository;
+import com.example.gyeonjutravel.domain.notification.repository.FcmTokenRepository;
 import com.example.gyeonjutravel.domain.pet.repository.PetRepository;
 import com.example.gyeonjutravel.domain.report.repository.PlaceReportRepository;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
+import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
+import com.example.gyeonjutravel.domain.stamp.repository.StampAlbumRepository;
 import com.example.gyeonjutravel.domain.terms.repository.MemberTermsAgreementRepository;
 import com.example.gyeonjutravel.domain.terms.service.TermsService;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
@@ -49,9 +54,12 @@ public class MemberService {
     private final PasswordResetVerificationRepository passwordResetVerificationRepository;
     private final NotificationRepository notificationRepository;
     private final NotificationSettingRepository notificationSettingRepository;
+    private final FcmTokenRepository fcmTokenRepository;
     private final PetRepository petRepository;
     private final PlaceReportRepository placeReportRepository;
     private final ScheduleRepository scheduleRepository;
+    private final PlaceVisitRepository placeVisitRepository;
+    private final StampAlbumRepository stampAlbumRepository;
     private final InquiryRepository inquiryRepository;
     private final MemberTermsAgreementRepository memberTermsAgreementRepository;
     private final TermsService termsService;
@@ -98,6 +106,24 @@ public class MemberService {
         }
 
         return createAuthResponse(member);
+    }
+
+    public TokenRefreshResponse refreshAccessToken(TokenRefreshRequest request) {
+        String refreshToken = request.refreshToken();
+        if (blacklistedTokenRepository.existsByToken(refreshToken) || !jwtTokenProvider.isValidRefreshToken(refreshToken)) {
+            throw new GeneralException(MemberErrorCode.INVALID_TOKEN);
+        }
+
+        String email = jwtTokenProvider.getSubject(refreshToken);
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
+
+        return new TokenRefreshResponse(
+                jwtTokenProvider.createAccessToken(member),
+                refreshToken,
+                jwtTokenProvider.getAccessTokenExpiresInSeconds(),
+                jwtTokenProvider.getRefreshTokenExpiresInSeconds()
+        );
     }
 
     @Transactional
@@ -184,12 +210,15 @@ public class MemberService {
     public void withdraw(Member member, String token) {
         blacklistToken(token);
         memberRepository.deleteBookmarksByMemberId(member.getId());
+        fcmTokenRepository.deleteAllByMemberId(member.getId());
         notificationRepository.deleteAllByMemberId(member.getId());
         notificationSettingRepository.deleteByMemberId(member.getId());
+        placeVisitRepository.deleteAllByMemberId(member.getId());
+        stampAlbumRepository.deletePhotosByMemberId(member.getId());
+        stampAlbumRepository.deleteAllByMemberId(member.getId());
         scheduleRepository.deleteItemsByMemberId(member.getId());
         scheduleRepository.deleteAllByMemberId(member.getId());
-        placeReportRepository.deletePetPoliciesByMemberId(member.getId());
-        placeReportRepository.deleteAllByMemberId(member.getId());
+        placeReportRepository.anonymizeMemberByMemberId(member.getId());
         inquiryRepository.deleteAllByMemberId(member.getId());
         petRepository.deleteAllByMemberId(member.getId());
         memberTermsAgreementRepository.deleteByMemberId(member.getId());

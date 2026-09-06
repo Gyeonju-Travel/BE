@@ -9,6 +9,8 @@ import com.example.gyeonjutravel.domain.schedule.entity.Schedule;
 import com.example.gyeonjutravel.domain.schedule.entity.DepartureArea;
 import com.example.gyeonjutravel.domain.schedule.repository.ScheduleRepository;
 import com.example.gyeonjutravel.domain.schedule.service.ScheduleMatrixCache;
+import com.example.gyeonjutravel.domain.stamp.entity.PlaceVisit;
+import com.example.gyeonjutravel.domain.stamp.repository.PlaceVisitRepository;
 import com.example.gyeonjutravel.global.tmap.MatrixNode;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrix;
 import com.example.gyeonjutravel.global.tmap.WalkingMatrixClient;
@@ -27,6 +29,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +65,9 @@ class ScheduleControllerIntegrationTest {
 
     @Autowired
     private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private PlaceVisitRepository placeVisitRepository;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -109,6 +115,8 @@ class ScheduleControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.departure.code").value("HWANGRIDAN_GIL"))
                 .andExpect(jsonPath("$.result.recommendedPlaces[0].placeId").value(garden.getId()))
+                .andExpect(jsonPath("$.result.recommendedPlaces[0].category").value("CAFE"))
+                .andExpect(jsonPath("$.result.recommendedPlaces[0].categoryLabel").value("카페"))
                 .andExpect(jsonPath("$.result.recommendedPlaces[0].walkingDurationSeconds").value(300))
                 .andExpect(jsonPath("$.result.recommendedPlaces[0].walkingDistanceMeters").value(350))
                 .andExpect(jsonPath("$.result.recommendedPlaces[1].placeId").value(cafe.getId()))
@@ -148,6 +156,8 @@ class ScheduleControllerIntegrationTest {
                         )))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.result.places[0].placeId").value(village.getId()))
+                .andExpect(jsonPath("$.result.places[0].category").value("CAFE"))
+                .andExpect(jsonPath("$.result.places[0].categoryLabel").value("카페"))
                 .andExpect(jsonPath("$.result.places[0].walkingDurationSeconds").value(900))
                 .andExpect(jsonPath("$.result.places[1].placeId").value(garden.getId()))
                 .andExpect(jsonPath("$.result.places[1].walkingDurationSeconds").value(400))
@@ -284,6 +294,8 @@ class ScheduleControllerIntegrationTest {
         Schedule second = new Schedule(member, targetDate, DepartureArea.GEUMRIDAN_GIL);
         second.addItem(park, 1, 400, 500);
         second = scheduleRepository.save(second);
+        second.start(LocalDate.now().atTime(10, 0));
+        placeVisitRepository.save(new PlaceVisit(member, second, park, LocalDateTime.now()));
 
         Schedule anotherDate = new Schedule(member, targetDate.plusDays(1), DepartureArea.CHEOMSEONGDAE);
         anotherDate.addItem(cafe, 1, 300, 350);
@@ -306,15 +318,25 @@ class ScheduleControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.date").value(targetDate.toString()))
                 .andExpect(jsonPath("$.result.totalScheduleCount").value(2))
                 .andExpect(jsonPath("$.result.schedules[0].scheduleId").value(first.getId()))
+                .andExpect(jsonPath("$.result.schedules[0].started").value(false))
+                .andExpect(jsonPath("$.result.schedules[0].startedAt").isEmpty())
+                .andExpect(jsonPath("$.result.schedules[0].ended").value(false))
+                .andExpect(jsonPath("$.result.schedules[0].endedAt").isEmpty())
                 .andExpect(jsonPath("$.result.schedules[0].totalPlaceCount").value(2))
                 .andExpect(jsonPath("$.result.schedules[0].totalWalkingDurationSeconds").value(300))
                 .andExpect(jsonPath("$.result.schedules[0].departure.code").value("HWANGRIDAN_GIL"))
                 .andExpect(jsonPath("$.result.schedules[0].lastPlaceName").value("날짜 공원"))
                 .andExpect(jsonPath("$.result.schedules[0].places[0].placeId").value(cafe.getId()))
+                .andExpect(jsonPath("$.result.schedules[0].places[0].category").value("CAFE"))
+                .andExpect(jsonPath("$.result.schedules[0].places[0].categoryLabel").value("카페"))
                 .andExpect(jsonPath("$.result.schedules[0].places[0].longitude").value(129.2111))
                 .andExpect(jsonPath("$.result.schedules[0].places[0].latitude").value(35.8311))
                 .andExpect(jsonPath("$.result.schedules[0].places[1].placeId").value(park.getId()))
                 .andExpect(jsonPath("$.result.schedules[1].scheduleId").value(second.getId()))
+                .andExpect(jsonPath("$.result.schedules[1].started").value(true))
+                .andExpect(jsonPath("$.result.schedules[1].startedAt").isNotEmpty())
+                .andExpect(jsonPath("$.result.schedules[1].ended").value(false))
+                .andExpect(jsonPath("$.result.schedules[1].endedAt").isEmpty())
                 .andExpect(jsonPath("$.result.schedules[1].lastPlaceName").value("날짜 공원"))
                 .andExpect(jsonPath("$.result.schedules[1].totalPlaceCount").value(1))
                 .andExpect(jsonPath("$.result.schedules[1].totalWalkingDurationSeconds").value(400));
@@ -341,6 +363,57 @@ class ScheduleControllerIntegrationTest {
                                 """.formatted(anotherMembersSchedule.getId())))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("SCHEDULE_404_1"));
+    }
+
+    @Test
+    void dateSchedulesIncludeEndedStatusAfterOfficialEndTime() throws Exception {
+        Member member = saveMember();
+        Place cafe = savePlace("SCHEDULE:ENDED:CAFE", "종료 카페", 129.2111, 35.8311);
+        LocalDate endedDate = LocalDate.now().minusDays(1);
+        Schedule schedule = new Schedule(member, endedDate, DepartureArea.HWANGRIDAN_GIL);
+        schedule.addItem(cafe, 1, 100, 120);
+        schedule.start(endedDate.atTime(10, 0));
+        schedule = scheduleRepository.saveAndFlush(schedule);
+
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        mockMvc.perform(get("/api/schedules")
+                        .param("date", endedDate.toString())
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.schedules[0].scheduleId").value(schedule.getId()))
+                .andExpect(jsonPath("$.result.schedules[0].started").value(true))
+                .andExpect(jsonPath("$.result.schedules[0].startedAt").value(endedDate + "T10:00:00"))
+                .andExpect(jsonPath("$.result.schedules[0].ended").value(true))
+                .andExpect(jsonPath("$.result.schedules[0].endedAt").value(endedDate + "T21:00:00"));
+    }
+
+    @Test
+    void memberCanStartAndCancelStartedSchedule() throws Exception {
+        Member member = saveMember();
+        Place cafe = savePlace("SCHEDULE:START:CAFE", "시작 카페", 129.2111, 35.8311);
+        Schedule schedule = new Schedule(member, LocalDate.now(), DepartureArea.HWANGRIDAN_GIL);
+        schedule.addItem(cafe, 1, 100, 120);
+        schedule = scheduleRepository.saveAndFlush(schedule);
+
+        String accessToken = jwtTokenProvider.createAccessToken(member);
+        mockMvc.perform(post("/api/schedules/{scheduleId}/start", schedule.getId())
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.scheduleId").value(schedule.getId()))
+                .andExpect(jsonPath("$.result.started").value(true))
+                .andExpect(jsonPath("$.result.startedAt").isNotEmpty());
+
+        mockMvc.perform(delete("/api/schedules/{scheduleId}/start", schedule.getId())
+                        .header("Authorization", "Bearer " + accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result.scheduleId").value(schedule.getId()))
+                .andExpect(jsonPath("$.result.started").value(false))
+                .andExpect(jsonPath("$.result.startedAt").isEmpty());
+        scheduleRepository.flush();
+
+        Schedule canceledSchedule = scheduleRepository.findById(schedule.getId()).orElseThrow();
+        assertThat(canceledSchedule.isStarted()).isFalse();
+        assertThat(canceledSchedule.getStartedAt()).isNull();
     }
 
     private WalkingMatrix matrixFor(
