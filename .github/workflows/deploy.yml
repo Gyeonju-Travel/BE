@@ -68,3 +68,5 @@ jobs:
               sudo docker-compose pull app
               sudo docker-compose up -d app
             fi
+
+            sudo docker image prune -f
