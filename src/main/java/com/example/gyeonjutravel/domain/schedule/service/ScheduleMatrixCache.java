@@ -124,6 +124,14 @@ public class ScheduleMatrixCache {
         previews.remove(token);
     }
 
+    public boolean isWalkable(PlaceCoordinate place) {
+        return walkingMatrixClient.isWalkable(new MatrixNode(
+                placeNodeKey(place.placeId()),
+                place.longitude(),
+                place.latitude()
+        ));
+    }
+
     private List<MatrixNode> toNodes(DepartureArea departureArea, List<PlaceCoordinate> places) {
         List<MatrixNode> nodes = new ArrayList<>();
         nodes.add(new MatrixNode(

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +53,9 @@ public class PlaceService {
     public PlaceDetailResponse getDetail(Long placeId) {
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND));
+        if (!ClosedPlaces.isOpen(place)) {
+            throw new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND);
+        }
         return PlaceDetailResponse.from(place);
     }
 
@@ -76,6 +80,7 @@ public class PlaceService {
                 );
         return bookmarks
                 .stream()
+                .filter(ClosedPlaces::isOpen)
                 .map(MapPlaceResponse::from)
                 .toList();
     }
@@ -103,17 +108,42 @@ public class PlaceService {
             if (categories != null && !categories.isEmpty()) {
                 predicates.add(root.get("category").in(categories));
             }
+            predicates.add(criteriaBuilder.not(root.get("name").in(ClosedPlaces.NAMES)));
             if (keyword != null && !keyword.isBlank()) {
-                String pattern = "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-                predicates.add(criteriaBuilder.or(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("roadAddress")), pattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("lotAddress")), pattern),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("detailCategory")), pattern)
-                ));
+                keywordTokens(keyword).forEach(token -> {
+                    String pattern = "%" + token.toLowerCase(Locale.ROOT) + "%";
+                    List<Predicate> tokenPredicates = new ArrayList<>(List.of(
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("area")), pattern),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("roadAddress")), pattern),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("lotAddress")), pattern),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("originalCategory")), pattern),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("detailCategory")), pattern)
+                    ));
+                    List<PlaceCategory> matchingCategories = categoriesMatching(token);
+                    if (!matchingCategories.isEmpty()) {
+                        tokenPredicates.add(root.get("category").in(matchingCategories));
+                    }
+                    predicates.add(criteriaBuilder.or(tokenPredicates.toArray(Predicate[]::new)));
+                });
             }
             return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
         };
+    }
+
+    private List<String> keywordTokens(String keyword) {
+        return Stream.of(keyword.trim().split("\\s+"))
+                .filter(token -> !token.isBlank())
+                .distinct()
+                .toList();
+    }
+
+    private List<PlaceCategory> categoriesMatching(String token) {
+        String normalizedToken = token.toLowerCase(Locale.ROOT);
+        return Stream.of(PlaceCategory.values())
+                .filter(category -> category.name().toLowerCase(Locale.ROOT).contains(normalizedToken)
+                        || category.getLabel().toLowerCase(Locale.ROOT).contains(normalizedToken))
+                .toList();
     }
 
     private void validatePage(int page, int size) {
@@ -128,8 +158,12 @@ public class PlaceService {
     }
 
     private Place findPlace(Long placeId) {
-        return placeRepository.findById(placeId)
+        Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND));
+        if (!ClosedPlaces.isOpen(place)) {
+            throw new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND);
+        }
+        return place;
     }
 
 }

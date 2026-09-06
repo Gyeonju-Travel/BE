@@ -28,7 +28,9 @@ public record ScheduleDetailResponse(
                 .map(SchedulePlaceDetailResponse::from)
                 .toList();
         long totalWalkingDurationSeconds = schedule.getItems().stream()
-                .mapToLong(item -> item.getWalkingDurationSeconds())
+                .map(item -> item.getWalkingDurationSeconds())
+                .filter(java.util.Objects::nonNull)
+                .mapToLong(Long::longValue)
                 .sum();
         String lastPlaceName = schedule.getItems().stream()
                 .max(Comparator.comparingInt(item -> item.getVisitOrder()))

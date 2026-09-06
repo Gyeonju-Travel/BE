@@ -17,8 +17,8 @@ public record RecommendedRoutePlaceResponse(
     public static RecommendedRoutePlaceResponse of(
             int visitOrder,
             Place place,
-            long walkingDurationSeconds,
-            long walkingDistanceMeters
+            Long walkingDurationSeconds,
+            Long walkingDistanceMeters
     ) {
         return new RecommendedRoutePlaceResponse(
                 visitOrder,

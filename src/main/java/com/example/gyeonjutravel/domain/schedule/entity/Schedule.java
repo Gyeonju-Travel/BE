@@ -91,6 +91,20 @@ public class Schedule extends BaseEntity {
             long walkingDurationSeconds,
             long walkingDistanceMeters
     ) {
+        addItem(
+                place,
+                visitOrder,
+                Long.valueOf(walkingDurationSeconds),
+                Long.valueOf(walkingDistanceMeters)
+        );
+    }
+
+    public void addItem(
+            Place place,
+            int visitOrder,
+            Long walkingDurationSeconds,
+            Long walkingDistanceMeters
+    ) {
         items.add(new ScheduleItem(
                 this,
                 place,

@@ -43,10 +43,10 @@ class PlaceDataInitializerIntegrationTest {
 
     @Test
     void allValidSpreadsheetRowsAreLoaded() {
-        assertThat(placeRepository.count()).isEqualTo(82);
+        assertThat(placeRepository.count()).isEqualTo(87);
         assertThat(placeRepository.countByCategory(PlaceCategory.RESTAURANT)).isEqualTo(41);
-        assertThat(placeRepository.countByCategory(PlaceCategory.CAFE)).isEqualTo(19);
-        assertThat(placeRepository.countByCategory(PlaceCategory.ATTRACTION)).isEqualTo(22);
+        assertThat(placeRepository.countByCategory(PlaceCategory.CAFE)).isEqualTo(25);
+        assertThat(placeRepository.countByCategory(PlaceCategory.ATTRACTION)).isEqualTo(21);
     }
 
     @Test
@@ -55,7 +55,30 @@ class PlaceDataInitializerIntegrationTest {
         mockMvc.perform(get("/api/places").param("categories", "CAFE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.totalElements").value(19));
+                .andExpect(jsonPath("$.result.totalElements").value(25));
+    }
+
+    @Test
+    @WithMockUser
+    void placeApiSearchesByAreaAndCategoryKeywordTokens() throws Exception {
+        mockMvc.perform(get("/api/places")
+                        .param("keyword", "황리단길 카페")
+                        .param("size", "200"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.result.totalElements").value(15))
+                .andExpect(jsonPath("$.result.places[0].category").value("CAFE"))
+                .andExpect(jsonPath("$.result.places[0].name").value("스컹크웍스"));
+    }
+
+    @Test
+    @WithMockUser
+    void placeApiReturnsAnAdditionalMapOnlyCafe() throws Exception {
+        mockMvc.perform(get("/api/places").param("keyword", "로라커피"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.result.totalElements").value(1))
+                .andExpect(jsonPath("$.result.places[0].name").value("로라커피"));
     }
 
     @Test
