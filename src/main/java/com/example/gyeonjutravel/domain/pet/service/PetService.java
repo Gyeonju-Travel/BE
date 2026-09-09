@@ -52,7 +52,7 @@ public class PetService {
                 .personality(request.personality().get(0))
                 .secondPersonality(request.personality().get(1))
                 .build());
-        return PetOnboardingResponse.from(pet);
+        return PetOnboardingResponse.from(pet, imageStorageService::readUrl);
     }
 
     @Transactional
@@ -69,24 +69,24 @@ public class PetService {
                 .secondPersonality(request.personality().get(1))
                 .representative(false)
                 .build());
-        return PetDetailResponse.from(pet);
+        return PetDetailResponse.from(pet, imageStorageService::readUrl);
     }
 
     public PetListResponse getMyPets(Long memberId) {
         RepresentativePetResponse representativePet = petRepository
                 .findFirstByMemberIdAndRepresentativeTrue(memberId)
-                .map(RepresentativePetResponse::from)
+                .map(pet -> RepresentativePetResponse.from(pet, imageStorageService::readUrl))
                 .orElse(null);
         List<PetSummaryResponse> otherPets = petRepository
                 .findAllByMemberIdAndRepresentativeFalseOrderByIdAsc(memberId)
                 .stream()
-                .map(PetSummaryResponse::from)
+                .map(pet -> PetSummaryResponse.from(pet, imageStorageService::readUrl))
                 .toList();
         return new PetListResponse(representativePet, otherPets);
     }
 
     public PetDetailResponse get(Long memberId, Long petId) {
-        return PetDetailResponse.from(findOwnedPet(memberId, petId));
+        return PetDetailResponse.from(findOwnedPet(memberId, petId), imageStorageService::readUrl);
     }
 
     @Transactional
@@ -107,9 +107,9 @@ public class PetService {
 
         List<PetSummaryResponse> otherPets = pets.stream()
                 .filter(pet -> pet != selectedPet)
-                .map(PetSummaryResponse::from)
+                .map(pet -> PetSummaryResponse.from(pet, imageStorageService::readUrl))
                 .toList();
-        return new PetListResponse(RepresentativePetResponse.from(selectedPet), otherPets);
+        return new PetListResponse(RepresentativePetResponse.from(selectedPet, imageStorageService::readUrl), otherPets);
     }
 
     @Transactional
@@ -133,7 +133,7 @@ public class PetService {
                 request.personality().get(0),
                 request.personality().get(1)
         );
-        return PetDetailResponse.from(pet);
+        return PetDetailResponse.from(pet, imageStorageService::readUrl);
     }
 
     private Pet findOwnedPet(Long memberId, Long petId) {
