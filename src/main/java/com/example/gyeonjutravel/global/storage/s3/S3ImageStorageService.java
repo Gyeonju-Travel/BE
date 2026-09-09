@@ -83,7 +83,7 @@ public class S3ImageStorageService implements ImageStorageService {
             s3Client.putObject(request, RequestBody.fromInputStream(image.getInputStream(), image.getSize()));
             return key;
         } catch (IOException | RuntimeException exception) {
-            throw new GeneralException(ErrorCode.IMAGE_UPLOAD_FAILED);
+            throw new GeneralException(ErrorCode.IMAGE_UPLOAD_FAILED, exception);
         }
     }
 }
