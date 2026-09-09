@@ -34,7 +34,7 @@ public class PlaceReportService {
                 .recommendationReason(trimToNull(request.recommendationReason()))
                 .status(PlaceReportStatus.SUBMITTED)
                 .build());
-        return PlaceReportCreateResponse.from(report);
+        return PlaceReportCreateResponse.from(report, imageStorageService::readUrl);
     }
 
     private Member findMember(Long memberId) {
