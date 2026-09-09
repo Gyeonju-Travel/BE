@@ -112,7 +112,7 @@ public class StampService {
         List<Place> stampPlaces = placeRepository.findAllByNameInOrderByIdAsc(StampType.stampPlaceNames()).stream()
                 .limit(6)
                 .toList();
-        return HomeResponse.of(representativePet, totalDistanceMeters, stampNames, stampPlaces);
+        return HomeResponse.of(representativePet, totalDistanceMeters, stampNames, stampPlaces, imageStorageService::readUrl);
     }
 
     public MyPageStampsResponse getMyPageStamps(Long memberId) {
@@ -125,7 +125,7 @@ public class StampService {
     public TravelRecordsResponse getTravelRecords(Long memberId) {
         Map<Long, StampAlbum> albumsByScheduleId = albumsByScheduleId(memberId);
         List<TravelRecordItemResponse> records = completedSchedules(memberId, albumsByScheduleId).stream()
-                .map(schedule -> TravelRecordItemResponse.from(schedule, albumsByScheduleId.get(schedule.getId())))
+                .map(schedule -> TravelRecordItemResponse.from(schedule, albumsByScheduleId.get(schedule.getId()), imageStorageService::readUrl))
                 .toList();
         return TravelRecordsResponse.of(records, earnedStampNames(memberId).size());
     }
@@ -211,7 +211,7 @@ public class StampService {
                 memberId,
                 album.getSchedule().getId()
         );
-        return StampAlbumResponse.from(album, visits);
+        return StampAlbumResponse.from(album, visits, imageStorageService::readUrl);
     }
 
     private Set<String> earnedStampNames(Long memberId) {
