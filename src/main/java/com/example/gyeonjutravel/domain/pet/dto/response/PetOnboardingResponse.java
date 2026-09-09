@@ -16,11 +16,11 @@ public record PetOnboardingResponse(
         List<PetPersonality> personality
 ) {
 
-    public static PetOnboardingResponse from(Pet pet) {
+    public static PetOnboardingResponse from(Pet pet, java.util.function.Function<String, String> imageUrl) {
         return new PetOnboardingResponse(
                 pet.getId(),
                 pet.getName(),
-                pet.getProfileImageUrl(),
+                imageUrl.apply(pet.getProfileImageUrl()),
                 pet.getSize(),
                 pet.getTravelPreference(),
                 List.of(pet.getPersonality(), pet.getSecondPersonality())

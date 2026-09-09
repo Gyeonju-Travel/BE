@@ -8,11 +8,11 @@ public record PetSummaryResponse(
         String profileImageUrl
 ) {
 
-    public static PetSummaryResponse from(Pet pet) {
+    public static PetSummaryResponse from(Pet pet, java.util.function.Function<String, String> imageUrl) {
         return new PetSummaryResponse(
                 pet.getId(),
                 pet.getName(),
-                pet.getProfileImageUrl()
+                imageUrl.apply(pet.getProfileImageUrl())
         );
     }
 }
