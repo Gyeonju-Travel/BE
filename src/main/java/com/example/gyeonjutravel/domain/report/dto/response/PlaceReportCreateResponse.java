@@ -11,11 +11,11 @@ public record PlaceReportCreateResponse(
         String imageUrl,
         LocalDate submittedAt
 ) {
-    public static PlaceReportCreateResponse from(PlaceReport report) {
+    public static PlaceReportCreateResponse from(PlaceReport report, java.util.function.Function<String, String> imageUrl) {
         return new PlaceReportCreateResponse(
                 report.getId(),
                 report.getStatus(),
-                report.getImageUrl(),
+                imageUrl.apply(report.getImageUrl()),
                 report.getCreatedAt().toLocalDate()
         );
     }

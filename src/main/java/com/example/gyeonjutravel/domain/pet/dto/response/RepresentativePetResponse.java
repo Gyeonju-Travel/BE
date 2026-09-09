@@ -12,11 +12,11 @@ public record RepresentativePetResponse(
         Integer age
 ) {
 
-    public static RepresentativePetResponse from(Pet pet) {
+    public static RepresentativePetResponse from(Pet pet, java.util.function.Function<String, String> imageUrl) {
         return new RepresentativePetResponse(
                 pet.getId(),
                 pet.getName(),
-                pet.getProfileImageUrl(),
+                imageUrl.apply(pet.getProfileImageUrl()),
                 pet.getBreed(),
                 pet.getSize(),
                 pet.getAge()

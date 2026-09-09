@@ -20,7 +20,7 @@ public record StampAlbumResponse(
         List<String> photoUrls
         // List<VisitedPlaceResponse> visitedPlaces
 ) {
-    public static StampAlbumResponse from(StampAlbum album, List<PlaceVisit> visits) {
+    public static StampAlbumResponse from(StampAlbum album, List<PlaceVisit> visits, java.util.function.Function<String, String> imageUrl) {
         List<String> attractionStampNames = visits.stream()
                 .map(PlaceVisit::getPlace)
                 .map(StampType::fromPlace)
@@ -37,12 +37,12 @@ public record StampAlbumResponse(
                 album.getSchedule().getTravelDate(),
                 album.getPet().getId(),
                 album.getPet().getName(),
-                album.getPet().getProfileImageUrl(),
+                imageUrl.apply(album.getPet().getProfileImageUrl()),
                 album.getFootprintCount(),
                 album.getTotalDistanceMeters(),
                 selectedStampName,
                 album.getPhotos().stream()
-                        .map(photo -> photo.getImageUrl())
+                        .map(photo -> imageUrl.apply(photo.getImageUrl()))
                         .toList()
                 // visits.stream()
                 //         .map(VisitedPlaceResponse::from)

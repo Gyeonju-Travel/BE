@@ -4,4 +4,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageStorageService {
     String upload(MultipartFile image, String directory);
+
+    default String readUrl(String storedReference) {
+        return storedReference;
+    }
 }

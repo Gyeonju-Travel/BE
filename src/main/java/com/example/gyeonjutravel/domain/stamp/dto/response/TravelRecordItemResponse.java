@@ -16,7 +16,7 @@ public record TravelRecordItemResponse(
         int totalPlaceCount,
         long totalWalkingDurationSeconds
 ) {
-    public static TravelRecordItemResponse from(Schedule schedule, StampAlbum album) {
+    public static TravelRecordItemResponse from(Schedule schedule, StampAlbum album, java.util.function.Function<String, String> imageUrl) {
         List<ScheduleItem> orderedItems = schedule.getItems().stream()
                 .sorted(Comparator.comparingInt(ScheduleItem::getVisitOrder))
                 .toList();
@@ -29,7 +29,7 @@ public record TravelRecordItemResponse(
                 schedule.getId(),
                 schedule.getTravelDate(),
                 titleOf(orderedItems),
-                photoUrlOf(album),
+                imageUrl.apply(photoUrlOf(album)),
                 orderedItems.size(),
                 totalWalkingDurationSeconds
         );

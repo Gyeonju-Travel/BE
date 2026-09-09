@@ -20,11 +20,12 @@ public record HomeResponse(
             Pet pet,
             long totalDistanceMeters,
             List<String> stampNames,
-            List<Place> places
+            List<Place> places,
+            java.util.function.Function<String, String> imageUrl
     ) {
         return new HomeResponse(
                 pet.getName(),
-                pet.getProfileImageUrl(),
+                imageUrl.apply(pet.getProfileImageUrl()),
                 Stream.of(pet.getPersonality(), pet.getSecondPersonality())
                         .filter(Objects::nonNull)
                         .toList(),

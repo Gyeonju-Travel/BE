@@ -18,11 +18,11 @@ public record PetDetailResponse(
         List<PetPersonality> personality
 ) {
 
-    public static PetDetailResponse from(Pet pet) {
+    public static PetDetailResponse from(Pet pet, java.util.function.Function<String, String> imageUrl) {
         return new PetDetailResponse(
                 pet.getId(),
                 pet.getName(),
-                pet.getProfileImageUrl(),
+                imageUrl.apply(pet.getProfileImageUrl()),
                 pet.getBreed(),
                 pet.getSize(),
                 pet.getAge(),
