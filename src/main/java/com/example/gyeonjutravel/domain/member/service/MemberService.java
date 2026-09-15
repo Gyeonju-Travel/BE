@@ -87,7 +87,6 @@ public class MemberService {
                 .password(passwordEncoder.encode(request.password()))
                 .name(request.name())
                 .birthDate(request.birthDate())
-                .gender(request.gender())
                 .phoneNumber(request.phoneNumber())
                 .build());
 
@@ -246,7 +245,6 @@ public class MemberService {
                 member.getEmail(),
                 member.getName(),
                 member.getBirthDate(),
-                member.getGender(),
                 member.getPhoneNumber(),
                 accessToken,
                 jwtTokenProvider.getAccessTokenExpiresInSeconds(),
