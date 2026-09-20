@@ -23,7 +23,7 @@ public final class TourPlaceMapper {
                 .longitude(longitude).latitude(latitude)
                 .imageUrl(first(text(common, "firstimage"), text(common, "firstimage2")))
                 .businessHours(text(intro, "usetime")).closedDays(text(intro, "restdate"))
-                .petAccessType(text(intro, "chkpet"))
+                .petAccessType(first(text(pet, "acmpyTypeCd"), text(intro, "chkpet")))
                 .allowedPets(text(pet, "acmpyPsblCpam"))
                 .petRequirements(text(pet, "acmpyNeedMtr"))
                 .petInfo(text(pet, "etcAcmpyInfo"))

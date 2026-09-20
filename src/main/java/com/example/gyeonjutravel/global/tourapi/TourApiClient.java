@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Component
@@ -21,6 +22,7 @@ public class TourApiClient {
     private final TourApiProperties properties;
     private final ObjectMapper mapper;
     private final RestClient client;
+    private final Map<String, CachedResponse> responseCache = new ConcurrentHashMap<>();
 
     public TourApiClient(TourApiProperties properties, ObjectMapper mapper) {
         this.properties = properties;
@@ -32,6 +34,8 @@ public class TourApiClient {
     }
 
     public List<JsonNode> attractions() {
+        CachedResponse cached = getCached("attractions");
+        if (cached != null) return cached.items();
         Map<String, JsonNode> result = new LinkedHashMap<>();
         int received = 0;
         for (int page = 1; page <= properties.getMaxPages(); page++) {
@@ -49,7 +53,9 @@ public class TourApiClient {
                 }
             }
             if (received >= body.path("totalCount").asInt(-1) && body.has("totalCount")) {
-                return List.copyOf(result.values());
+                List<JsonNode> attractions = List.copyOf(result.values());
+                putCached("attractions", attractions);
+                return attractions;
             }
             if (items.isEmpty()) throw unavailable();
         }
@@ -70,14 +76,45 @@ public class TourApiClient {
 
     private JsonNode single(String operation, String contentId, boolean withType) {
         if (contentId == null || !contentId.matches("[0-9]+")) throw unavailable();
+        String cacheKey = operation + ":" + contentId;
+        CachedResponse cached = getCached(cacheKey);
+        if (cached != null) return cached.item();
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("contentId", contentId);
         if (withType) params.put("contentTypeId", "12");
         List<JsonNode> items = items(request(operation, params));
-        if (items.isEmpty()) return null;
+        if (items.isEmpty()) {
+            putCached(cacheKey, (JsonNode) null);
+            return null;
+        }
         JsonNode item = items.getFirst();
         if (!contentId.equals(item.path("contentid").asText())) throw unavailable();
+        putCached(cacheKey, item);
         return item;
+    }
+
+    private CachedResponse getCached(String key) {
+        if (properties.getCacheTtl() == null || properties.getCacheTtl().isZero()
+                || properties.getCacheTtl().isNegative()) return null;
+        CachedResponse cached = responseCache.get(key);
+        if (cached == null || cached.expiresAtNanos() <= System.nanoTime()) {
+            responseCache.remove(key, cached);
+            return null;
+        }
+        return cached;
+    }
+
+    private void putCached(String key, List<JsonNode> items) {
+        long ttlNanos = properties.getCacheTtl().toNanos();
+        if (ttlNanos > 0) responseCache.put(key, new CachedResponse(items, null, System.nanoTime() + ttlNanos));
+    }
+
+    private void putCached(String key, JsonNode item) {
+        long ttlNanos = properties.getCacheTtl().toNanos();
+        if (ttlNanos > 0) responseCache.put(key, new CachedResponse(null, item, System.nanoTime() + ttlNanos));
+    }
+
+    private record CachedResponse(List<JsonNode> items, JsonNode item, long expiresAtNanos) {
     }
 
     private JsonNode request(String operation, Map<String, ?> params) {
@@ -94,8 +131,8 @@ public class TourApiClient {
                     .queryParam("MobileOS", "ETC").queryParam("MobileApp", "{mobileApp}")
                     .queryParam("_type", "json");
             params.forEach(uri::queryParam);
-            // 인증키가 포함된 전체 URL 대신 조회 조건만 기록합니다.
-            log.info("[TourAPI] 호출 시작 requestId={} operation={} params={}", requestId, operation, params);
+            // 인증키가 포함된 전체 URL 대신 조회 조건만 기록
+            // log.info("[TourAPI] 호출 시작 requestId={} operation={} params={}", requestId, operation, params);
             var entity = client.get().uri(uri.encode().buildAndExpand(Map.of(
                     "serviceKey", properties.getServiceKey(), "mobileApp", properties.getMobileApp())).toUri())
                     .retrieve().toEntity(String.class);
@@ -106,18 +143,18 @@ public class TourApiClient {
             if (!"0000".equals(code)) throw unavailable();
             JsonNode body = response.path("body");
             if (!body.isObject()) throw unavailable();
-            log.info("[TourAPI] 응답 성공 requestId={} operation={} httpStatus={} resultCode={} itemCount={} totalCount={} elapsedMs={}",
-                    requestId, operation, httpStatus, resultCode, items(body).size(), body.path("totalCount").asInt(-1),
-                    (System.nanoTime() - started) / 1_000_000);
+             /*log.info("[TourAPI] 응답 성공 requestId={} operation={} httpStatus={} resultCode={} itemCount={} totalCount={} elapsedMs={}",
+                     requestId, operation, httpStatus, resultCode, items(body).size(), body.path("totalCount").asInt(-1),
+                     (System.nanoTime() - started) / 1_000_000); */
             return body;
         } catch (Exception exception) {
             // HTTP 클라이언트의 예외에는 인증키가 포함된 URL이 담길 수 있음.
             if (exception instanceof org.springframework.web.client.RestClientResponseException httpException) {
                 httpStatus = httpException.getStatusCode().value();
             }
-            log.warn("[TourAPI] 호출 실패 requestId={} operation={} httpStatus={} resultCode={} errorType={} elapsedMs={}",
-                    requestId, operation, httpStatus, resultCode, exception.getClass().getSimpleName(),
-                    (System.nanoTime() - started) / 1_000_000);
+             log.warn("[TourAPI] 호출 실패 requestId={} operation={} httpStatus={} resultCode={} errorType={} elapsedMs={}",
+                     requestId, operation, httpStatus, resultCode, exception.getClass().getSimpleName(),
+                     (System.nanoTime() - started) / 1_000_000);
             throw unavailable();
         }
     }

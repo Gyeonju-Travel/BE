@@ -26,7 +26,13 @@ public class PlaceCatalog {
         List<Place> places = new ArrayList<>();
         places.addAll(repository.findAllByCategory(PlaceCategory.CAFE));
         places.addAll(repository.findAllByCategory(PlaceCategory.RESTAURANT));
-        if (includeAttractions) places.addAll(attractions());
+        if (includeAttractions) {
+            try {
+                places.addAll(attractions());
+            } catch (GeneralException exception) {
+                // 전체 조회에서는 관광공사 API 장애가 식당·카페 목록까지 막지 않도록 함.
+            }
+        }
         return places;
     }
 

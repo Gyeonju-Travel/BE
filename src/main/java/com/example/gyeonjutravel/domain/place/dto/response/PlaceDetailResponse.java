@@ -2,6 +2,7 @@ package com.example.gyeonjutravel.domain.place.dto.response;
 
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 public record PlaceDetailResponse(
         Long id,
@@ -14,7 +15,9 @@ public record PlaceDetailResponse(
         String roadAddress,
         String lotAddress,
         String postalCode,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         String phone,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         String businessHours,
         String breakTime,
         String closedDays,
@@ -34,8 +37,10 @@ public record PlaceDetailResponse(
         return new PlaceDetailResponse(
                 place.getId(), place.getName(), place.getCategory(), place.getCategory().getLabel(),
                 place.getDetailCategory(), place.getArea(), place.getAdministrativeDistrict(),
-                place.getRoadAddress(), place.getLotAddress(), place.getPostalCode(), place.getPhone(),
-                place.getBusinessHours(), place.getBreakTime(), place.getClosedDays(), place.getLongitude(),
+                place.getRoadAddress(), place.getLotAddress(), place.getPostalCode(),
+                place.getCategory() == PlaceCategory.ATTRACTION ? null : place.getPhone(),
+                place.getCategory() == PlaceCategory.ATTRACTION ? null : place.getBusinessHours(),
+                place.getBreakTime(), place.getClosedDays(), place.getLongitude(),
                 place.getLatitude(), place.getImageUrl(), place.getPetAccessType(), place.getAllowedPets(),
                 place.getPetRequirements(), place.getPetInfo(), place.getPetFacilities(),
                 place.getPetProvidedItems(), place.getPetSafetyInfo(), place.getOverview()

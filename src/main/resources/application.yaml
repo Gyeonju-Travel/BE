@@ -19,7 +19,7 @@ spring:
   jpa:
     show-sql: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -71,5 +71,6 @@ tour-api:
   legal-district-code: "130"
   connect-timeout: 3s
   read-timeout: 7s
+  cache-ttl: 3h
   page-size: 100
   max-pages: 10

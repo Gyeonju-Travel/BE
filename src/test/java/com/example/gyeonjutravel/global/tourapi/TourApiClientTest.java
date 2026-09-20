@@ -38,6 +38,7 @@ class TourApiClientTest {
         properties.setBaseUrl("http://127.0.0.1:" + server.getAddress().getPort());
         properties.setServiceKey("test+key/with=characters");
         properties.setReadTimeout(Duration.ofMillis(200));
+        properties.setCacheTtl(Duration.ZERO);
         client = new TourApiClient(properties, new ObjectMapper());
     }
 
@@ -53,6 +54,16 @@ class TourApiClientTest {
                 .contains("/areaBasedList2?", "contentTypeId=12", "lDongRegnCd=47", "lDongSignguCd=130",
                         "serviceKey=test%2Bkey%2Fwith%3Dcharacters", "_type=json")
                 .doesNotContain("areaCode=", "sigunguCode="));
+    }
+
+    @Test
+    void cachesSuccessfulListResponseForConfiguredTtl() {
+        properties.setCacheTtl(Duration.ofMinutes(1));
+        response.set(body("{\"contentid\":\"123\",\"contenttypeid\":\"12\"}", 1));
+
+        assertThat(client.attractions()).hasSize(1);
+        assertThat(client.attractions()).hasSize(1);
+        assertThat(requests).hasSize(1);
     }
 
     @Test
