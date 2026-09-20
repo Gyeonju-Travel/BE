@@ -128,7 +128,8 @@ public class ScheduleMatrixCache {
         return walkingMatrixClient.isWalkable(new MatrixNode(
                 placeNodeKey(place.placeId()),
                 place.longitude(),
-                place.latitude()
+                place.latitude(),
+                place.tourContentId()
         ));
     }
 
@@ -142,7 +143,8 @@ public class ScheduleMatrixCache {
         places.forEach(place -> nodes.add(new MatrixNode(
                 placeNodeKey(place.placeId()),
                 place.longitude(),
-                place.latitude()
+                place.latitude(),
+                place.tourContentId()
         )));
         return nodes;
     }
@@ -156,7 +158,14 @@ public class ScheduleMatrixCache {
         return "PLACE:" + placeId;
     }
 
-    public record PlaceCoordinate(Long placeId, double longitude, double latitude) {
+    public record PlaceCoordinate(Long placeId, double longitude, double latitude, String tourContentId) {
+        public PlaceCoordinate(Long placeId, double longitude, double latitude) {
+            this(placeId, longitude, latitude, null);
+        }
+
+        public static PlaceCoordinate from(com.example.gyeonjutravel.domain.place.entity.Place place) {
+            return new PlaceCoordinate(place.getId(), place.getLongitude(), place.getLatitude(), place.getTourContentId());
+        }
     }
 
     public record MatrixPreview(String token, WalkingMatrix matrix, Instant expiresAt) {
