@@ -63,7 +63,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "FEMALE",
                                   "phoneNumber": "010-1234-5678",
                                   "termsAgreementToken": "%s"
                                 }
@@ -72,10 +71,11 @@ class MemberControllerIntegrationTest {
                 .andExpect(jsonPath("$.result.email").value(email))
                 .andExpect(jsonPath("$.result.name").value("김견주"))
                 .andExpect(jsonPath("$.result.birthDate").value("1995-04-12"))
-                .andExpect(jsonPath("$.result.gender").value("FEMALE"))
+                .andExpect(jsonPath("$.result.gender").doesNotHaveJsonPath())
                 .andExpect(jsonPath("$.result.onboardingCompleted").value(false));
 
         var savedMember = memberRepository.findByEmail(email).orElseThrow();
+        assertThat(savedMember.getGender()).isNull();
         var termsAgreement = memberTermsAgreementRepository.findByMemberId(savedMember.getId()).orElseThrow();
         assertThat(termsAgreement.isTermsOfServiceAgreed()).isTrue();
         assertThat(termsAgreement.isPrivacyPolicyAgreed()).isTrue();
@@ -148,7 +148,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "different123!",
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "MALE",
                                   "phoneNumber": "010-1234-5678",
                                   "termsAgreementToken": "%s"
                                 }
@@ -168,7 +167,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "源寃ъ＜",
                                   "birthDate": "1995-04-12",
-                                  "gender": "FEMALE",
                                   "phoneNumber": "010-1234-5678",
                                   "termsAgreementToken": "invalid-token"
                                 }
@@ -189,7 +187,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "FEMALE",
                                   "phoneNumber": "010-1234-5678",
                                   "termsAgreementToken": "%s"
                                 }
@@ -238,7 +235,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "MALE",
                                   "phoneNumber": "010-9876-5432",
                                   "termsAgreementToken": "%s"
                                 }
@@ -274,7 +270,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "FEMALE",
                                   "phoneNumber": "010-1234-5678",
                                   "termsAgreementToken": "%s"
                                 }
@@ -435,7 +430,6 @@ class MemberControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "김견주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "MALE",
                                   "phoneNumber": "010-9876-5432",
                                   "termsAgreementToken": "%s"
                                 }

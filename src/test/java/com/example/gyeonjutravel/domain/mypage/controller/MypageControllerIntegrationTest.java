@@ -64,7 +64,6 @@ class MypageControllerIntegrationTest {
                                   "passwordConfirmation": "password123!",
                                   "name": "경주",
                                   "birthDate": "1995-04-12",
-                                  "gender": "FEMALE",
                                   "phoneNumber": "010-1234-5678",
                                   "termsAgreementToken": "%s"
                                 }
