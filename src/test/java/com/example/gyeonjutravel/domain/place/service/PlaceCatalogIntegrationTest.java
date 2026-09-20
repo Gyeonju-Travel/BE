@@ -73,6 +73,27 @@ class PlaceCatalogIntegrationTest {
     }
 
     @Test
+    void combinesLocalAndApiAttractionsAndResolvesOnlyApiDetails() throws Exception {
+        Place local = repository.saveAndFlush(Place.builder().sourceKey("PLACE:66")
+                .category(PlaceCategory.ATTRACTION).originalCategory("관광지").name("월정교")
+                .roadAddress("경주").longitude(129.2161732).latitude(35.82793354).build());
+        var item = mapper.readTree("""
+                {"contentid":"2756611","title":"경주읍성","mapx":"129.2139061887","mapy":"35.8473202021"}
+                """);
+        when(client.attractions()).thenReturn(List.of(item));
+        when(client.common("2756611")).thenReturn(item);
+        var combined = catalog.attractions();
+        assertThat(combined).extracting(Place::getName).containsExactlyInAnyOrder("월정교", "경주읍성");
+        catalog.resolveAll(combined);
+        assertThat(repository.findById(local.getId()).orElseThrow().getName()).isEqualTo("월정교");
+        verify(client).common("2756611");
+        verify(client).intro("2756611");
+        verify(client).pet("2756611");
+        assertThat(catalog.attractions()).extracting(Place::getId).doesNotHaveDuplicates();
+        assertThat(repository.count()).isEqualTo(2);
+    }
+
+    @Test
     void missingContentIdDoesNotAttemptLegacyMatching() {
         Place invalid = repository.saveAndFlush(Place.tourReference("TOUR_API:invalid"));
         assertThatThrownBy(() -> catalog.resolve(invalid)).isInstanceOf(GeneralException.class);

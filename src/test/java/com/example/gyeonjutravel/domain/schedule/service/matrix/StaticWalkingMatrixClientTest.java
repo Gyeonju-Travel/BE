@@ -18,6 +18,27 @@ class StaticWalkingMatrixClientTest {
     private final StaticWalkingMatrixClient client = new StaticWalkingMatrixClient();
 
     @Test
+    void mapsAllApiAttractionsByContentIdIncludingChangedCoordinates() throws Exception {
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        List<MatrixNode> nodes = new ArrayList<>();
+        nodes.add(new MatrixNode("START", 129.20995370588062, 35.83740829748873));
+        try (var input = getClass().getResourceAsStream("/data/tour-attractions.json")) {
+            for (var item : mapper.readTree(input)) {
+                nodes.add(new MatrixNode("PLACE:" + item.path("contentid").asText(),
+                        item.path("mapx").asDouble(), item.path("mapy").asDouble(),
+                        item.path("contentid").asText()));
+            }
+        }
+        assertThat(nodes).hasSize(23);
+        assertThat(nodes.stream().skip(1).filter(client::isWalkable)).hasSize(7);
+        var matrix = client.calculate(nodes);
+        assertThat(matrix.findRoute("START", "PLACE:2603509")).get()
+                .satisfies(route -> assertThat(route.durationSeconds()).isPositive());
+        assertThat(matrix.findRoute("START", "PLACE:127619")).get()
+                .satisfies(route -> assertThat(route.durationSeconds()).isNull());
+    }
+
+    @Test
     void returnsStoredWalkingTimeInBothDirections() {
         WalkingMatrix matrix = client.calculate(List.of(
                 new MatrixNode("START", 129.20995370588062, 35.83740829748873),

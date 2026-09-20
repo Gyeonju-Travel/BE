@@ -50,8 +50,9 @@ class TourApiClientTest {
         assertThat(client.attractions()).hasSize(1);
         assertThat(client.attractions()).hasSize(1);
         assertThat(requests).hasSize(2).allSatisfy(uri -> assertThat(uri)
-                .contains("/areaBasedList2?", "contentTypeId=12", "areaCode=35", "sigunguCode=2",
-                        "serviceKey=test%2Bkey%2Fwith%3Dcharacters", "_type=json"));
+                .contains("/areaBasedList2?", "contentTypeId=12", "lDongRegnCd=47", "lDongSignguCd=130",
+                        "serviceKey=test%2Bkey%2Fwith%3Dcharacters", "_type=json")
+                .doesNotContain("areaCode=", "sigunguCode="));
     }
 
     @Test
