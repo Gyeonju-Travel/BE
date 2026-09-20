@@ -94,8 +94,8 @@ public class TourApiClient {
                     .queryParam("MobileOS", "ETC").queryParam("MobileApp", "{mobileApp}")
                     .queryParam("_type", "json");
             params.forEach(uri::queryParam);
-            // 인증키가 포함된 전체 URL 대신 조회 조건만 기록합니다.
-            log.info("[TourAPI] 호출 시작 requestId={} operation={} params={}", requestId, operation, params);
+            // 인증키가 포함된 전체 URL 대신 조회 조건만 기록
+            // log.info("[TourAPI] 호출 시작 requestId={} operation={} params={}", requestId, operation, params);
             var entity = client.get().uri(uri.encode().buildAndExpand(Map.of(
                     "serviceKey", properties.getServiceKey(), "mobileApp", properties.getMobileApp())).toUri())
                     .retrieve().toEntity(String.class);
@@ -106,18 +106,18 @@ public class TourApiClient {
             if (!"0000".equals(code)) throw unavailable();
             JsonNode body = response.path("body");
             if (!body.isObject()) throw unavailable();
-            log.info("[TourAPI] 응답 성공 requestId={} operation={} httpStatus={} resultCode={} itemCount={} totalCount={} elapsedMs={}",
-                    requestId, operation, httpStatus, resultCode, items(body).size(), body.path("totalCount").asInt(-1),
-                    (System.nanoTime() - started) / 1_000_000);
+             /*log.info("[TourAPI] 응답 성공 requestId={} operation={} httpStatus={} resultCode={} itemCount={} totalCount={} elapsedMs={}",
+                     requestId, operation, httpStatus, resultCode, items(body).size(), body.path("totalCount").asInt(-1),
+                     (System.nanoTime() - started) / 1_000_000); */
             return body;
         } catch (Exception exception) {
             // HTTP 클라이언트의 예외에는 인증키가 포함된 URL이 담길 수 있음.
             if (exception instanceof org.springframework.web.client.RestClientResponseException httpException) {
                 httpStatus = httpException.getStatusCode().value();
             }
-            log.warn("[TourAPI] 호출 실패 requestId={} operation={} httpStatus={} resultCode={} errorType={} elapsedMs={}",
-                    requestId, operation, httpStatus, resultCode, exception.getClass().getSimpleName(),
-                    (System.nanoTime() - started) / 1_000_000);
+             log.warn("[TourAPI] 호출 실패 requestId={} operation={} httpStatus={} resultCode={} errorType={} elapsedMs={}",
+                     requestId, operation, httpStatus, resultCode, exception.getClass().getSimpleName(),
+                     (System.nanoTime() - started) / 1_000_000);
             throw unavailable();
         }
     }

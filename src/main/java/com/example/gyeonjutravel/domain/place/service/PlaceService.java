@@ -46,7 +46,17 @@ public class PlaceService {
                 .toList();
         long offset = (long) page * size;
         List<Place> selected = matches.stream().skip(offset).limit(size).toList();
-        List<MapPlaceResponse> content = placeCatalog.resolveAll(selected).stream().map(MapPlaceResponse::from).toList();
+        List<Place> placesToResolve = selected;
+        try {
+            placeCatalog.resolveAll(selected);
+        } catch (GeneralException exception) {
+            // 전체 조회에서는 관광공사 상세 API 장애가 식당·카페 표시까지 막지 않도록 함.
+            if (!includeAttractions) throw exception;
+            placesToResolve = selected.stream()
+                    .filter(place -> place.getCategory() != PlaceCategory.ATTRACTION)
+                    .toList();
+        }
+        List<MapPlaceResponse> content = placesToResolve.stream().map(MapPlaceResponse::from).toList();
         return new MapPlacePageResponse(content, page, size, matches.size(),
                 (int) ((matches.size() + (long) size - 1) / size));
     }
