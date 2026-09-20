@@ -39,7 +39,7 @@ public class S3ImageStorageService implements ImageStorageService {
             return storedReference;
         }
         String key = storedReference;
-        // Only migrate legacy URLs belonging to our configured bucket.
+        // 설정된 버킷에 속하는 기존 URL만 변환.
         if (storedReference.contains("://")) {
             URI uri = URI.create(storedReference);
             String host = uri.getHost();
