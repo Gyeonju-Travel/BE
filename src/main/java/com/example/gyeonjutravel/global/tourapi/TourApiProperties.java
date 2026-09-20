@@ -20,6 +20,7 @@ public class TourApiProperties {
     private String legalDistrictCode = "130";
     private Duration connectTimeout = Duration.ofSeconds(3);
     private Duration readTimeout = Duration.ofSeconds(7);
+    private Duration cacheTtl = Duration.ofMinutes(2);
     private int pageSize = 100;
     private int maxPages = 10;
 }
