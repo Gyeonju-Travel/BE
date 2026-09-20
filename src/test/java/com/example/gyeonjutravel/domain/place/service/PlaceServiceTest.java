@@ -24,8 +24,17 @@ class PlaceServiceTest {
     @Autowired
     private PlaceService placeService;
 
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private PlaceCatalog placeCatalog;
+
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.when(placeCatalog.all(org.mockito.ArgumentMatchers.anyBoolean()))
+                .thenAnswer(call -> placeRepository.findAll());
+        org.mockito.Mockito.when(placeCatalog.resolve(org.mockito.ArgumentMatchers.any()))
+                .thenAnswer(call -> call.getArgument(0));
+        org.mockito.Mockito.when(placeCatalog.resolveAll(org.mockito.ArgumentMatchers.anyList()))
+                .thenAnswer(call -> call.getArgument(0));
         placeRepository.saveAll(List.of(
                 createPlace("PLACE:1", "료미", PlaceCategory.RESTAURANT, "황리단길", 129.2097, 35.8356),
                 createPlace("PLACE:2", "데어벤치", PlaceCategory.CAFE, "황리단길", 129.2127, 35.8351),
@@ -49,6 +58,16 @@ class PlaceServiceTest {
         MapPlacePageResponse result = placeService.search(null, null, 0, 200);
 
         assertThat(result.totalElements()).isEqualTo(4);
+    }
+
+    @Test
+    void paginationAppliesAfterCombiningBothSources() {
+        MapPlacePageResponse first = placeService.search(null, null, 0, 2);
+        MapPlacePageResponse second = placeService.search(null, null, 1, 2);
+        assertThat(first.totalElements()).isEqualTo(4);
+        assertThat(first.totalPages()).isEqualTo(2);
+        assertThat(second.places()).extracting("name").containsExactly("경주 첨성대", "교촌카페");
+        assertThat(placeService.search(null, null, Integer.MAX_VALUE, 200).places()).isEmpty();
     }
 
     @Test

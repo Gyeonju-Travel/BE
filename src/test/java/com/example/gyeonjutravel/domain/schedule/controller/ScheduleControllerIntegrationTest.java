@@ -369,7 +369,7 @@ class ScheduleControllerIntegrationTest {
         second.addItem(park, 1, 400, 500);
         second = scheduleRepository.save(second);
         second.start(LocalDate.now().atTime(10, 0));
-        placeVisitRepository.save(new PlaceVisit(member, second, park, LocalDateTime.now()));
+        placeVisitRepository.save(new PlaceVisit(member, second, park, com.example.gyeonjutravel.domain.stamp.entity.StampType.CHEOMSEONGDAE, LocalDateTime.now()));
 
         Schedule anotherDate = new Schedule(member, targetDate.plusDays(1), DepartureArea.CHEOMSEONGDAE);
         anotherDate.addItem(cafe, 1, 300, 350);

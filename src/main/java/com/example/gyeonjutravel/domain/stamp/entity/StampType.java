@@ -32,10 +32,18 @@ public enum StampType {
     }
 
     public static Optional<StampType> fromPlace(Place place) {
+        if (place.getCategory() != com.example.gyeonjutravel.domain.place.entity.PlaceCategory.ATTRACTION) {
+            return Optional.empty();
+        }
+        if (place.getStampType() != null) return Optional.of(place.getStampType());
         return Arrays.stream(values())
                 .filter(stampType -> stampType.placeName != null)
-                .filter(stampType -> stampType.placeName.equals(place.getName()))
+                .filter(stampType -> normalize(stampType.placeName).equals(normalize(place.getName())))
                 .findFirst();
+    }
+
+    private static String normalize(String name) {
+        return name == null ? "" : name.replaceAll("\\s+", "");
     }
 
     public static boolean qualifiesForMaster(int earnedStampCount) {

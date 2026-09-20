@@ -52,6 +52,7 @@ public class StampService {
 
     private final ScheduleRepository scheduleRepository;
     private final PlaceRepository placeRepository;
+    private final com.example.gyeonjutravel.domain.place.service.PlaceCatalog placeCatalog;
     private final PetRepository petRepository;
     private final StampAlbumRepository stampAlbumRepository;
     private final PlaceVisitRepository placeVisitRepository;
@@ -109,7 +110,8 @@ public class StampService {
         List<String> stampNames = earnedStampNames(memberId).stream()
                 .limit(3)
                 .toList();
-        List<Place> stampPlaces = placeRepository.findAllByNameInOrderByIdAsc(StampType.stampPlaceNames()).stream()
+        List<Place> stampPlaces = placeCatalog.attractions().stream()
+                .filter(place -> StampType.fromPlace(place).isPresent())
                 .limit(6)
                 .toList();
         return HomeResponse.of(representativePet, totalDistanceMeters, stampNames, stampPlaces, imageStorageService::readUrl);
@@ -125,7 +127,10 @@ public class StampService {
     public TravelRecordsResponse getTravelRecords(Long memberId) {
         Map<Long, StampAlbum> albumsByScheduleId = albumsByScheduleId(memberId);
         List<TravelRecordItemResponse> records = completedSchedules(memberId, albumsByScheduleId).stream()
-                .map(schedule -> TravelRecordItemResponse.from(schedule, albumsByScheduleId.get(schedule.getId()), imageStorageService::readUrl))
+                .map(schedule -> {
+                    placeCatalog.resolveAll(schedule.getItems().stream().map(item -> item.getPlace()).toList());
+                    return TravelRecordItemResponse.from(schedule, albumsByScheduleId.get(schedule.getId()), imageStorageService::readUrl);
+                })
                 .toList();
         return TravelRecordsResponse.of(records, earnedStampNames(memberId).size());
     }
@@ -137,6 +142,7 @@ public class StampService {
 
         Place place = placeRepository.findById(placeId)
                 .orElseThrow(() -> new GeneralException(ScheduleErrorCode.INVALID_PLACE_SELECTION));
+        placeCatalog.resolve(place);
         StampType stampType = StampType.fromPlace(place)
                 .orElseThrow(() -> new GeneralException(StampErrorCode.UNSUPPORTED_STAMP_PLACE));
         long distanceMeters = Math.round(haversineMeters(
@@ -154,9 +160,10 @@ public class StampService {
                         schedule.getMember(),
                         schedule,
                         place,
+                        stampType,
                         LocalDateTime.now()
                 )));
-        return PlaceVisitResponse.of(visit, stampType);
+        return PlaceVisitResponse.of(visit);
     }
 
     private StampAlbum findOrCreateAlbum(Long memberId, Schedule schedule) {
@@ -222,9 +229,7 @@ public class StampService {
             stampNames.add(StampType.PERFECT_TRIP.getDisplayName());
         }
         placeVisitRepository.findAllWithPlaceByMemberId(memberId).stream()
-                .map(PlaceVisit::getPlace)
-                .map(StampType::fromPlace)
-                .flatMap(java.util.Optional::stream)
+                .map(PlaceVisit::getStampType)
                 .map(StampType::getDisplayName)
                 .forEach(stampNames::add);
         return stampNames;

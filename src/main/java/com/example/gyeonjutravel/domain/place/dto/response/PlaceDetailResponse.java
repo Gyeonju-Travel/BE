@@ -27,7 +27,8 @@ public record PlaceDetailResponse(
         String petInfo,
         String petFacilities,
         String petProvidedItems,
-        String petSafetyInfo
+        String petSafetyInfo,
+        String overview
 ) {
     public static PlaceDetailResponse from(Place place) {
         return new PlaceDetailResponse(
@@ -37,7 +38,7 @@ public record PlaceDetailResponse(
                 place.getBusinessHours(), place.getBreakTime(), place.getClosedDays(), place.getLongitude(),
                 place.getLatitude(), place.getImageUrl(), place.getPetAccessType(), place.getAllowedPets(),
                 place.getPetRequirements(), place.getPetInfo(), place.getPetFacilities(),
-                place.getPetProvidedItems(), place.getPetSafetyInfo()
+                place.getPetProvidedItems(), place.getPetSafetyInfo(), place.getOverview()
         );
     }
 }

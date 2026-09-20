@@ -21,6 +21,37 @@ import java.util.Map;
 
 @Component
 public class StaticWalkingMatrixClient implements WalkingMatrixClient {
+    // API 대표 좌표와 도보 측정 지점이 달라도 같은 관광지의 기존 경로를 사용.
+    private static final Map<String, String> TOUR_NODE_IDS = Map.ofEntries(
+            Map.entry("128677", "P085"),
+            Map.entry("128116", "P073"),
+            Map.entry("128676", "P071"),
+            Map.entry("126218", "P091"),
+            Map.entry("126230", "P081"),
+            Map.entry("126166", "P079"),
+            Map.entry("128612", "P087"),
+            Map.entry("126207", "P076"),
+            Map.entry("2756689", "P070"),
+            Map.entry("2658227", "P072"),
+            Map.entry("127487", "P088"),
+            Map.entry("2756611", "P075"),
+            Map.entry("2941029", "P086"),
+            Map.entry("128679", "P083"),
+            Map.entry("2015553", "P089"),
+            Map.entry("126134", "P084"),
+            Map.entry("3029628", "P078"),
+            Map.entry("2778053", "P090"),
+            Map.entry("2603509", "P074"),
+            Map.entry("2756619", "P077"),
+            Map.entry("2789998", "P082"),
+            Map.entry("127619", "P080"));
+
+    private KnownNode linkedTourNode(MatrixNode requestedNode) {
+        String id = requestedNode.tourContentId() == null ? null : TOUR_NODE_IDS.get(requestedNode.tourContentId());
+        if (id == null) return null;
+        return knownNodes.stream().filter(node -> node.id().equals(id)).findFirst().orElseThrow();
+    }
+
 
     private static final String START_NODE_KEY = "START";
     private static final double NODE_MATCH_RADIUS_METERS = 30.0;
@@ -61,6 +92,8 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
 
     @Override
     public boolean isWalkable(MatrixNode requestedNode) {
+        KnownNode linked = linkedTourNode(requestedNode);
+        if (linked != null) return linked.walkable();
         boolean departure = START_NODE_KEY.equals(requestedNode.key());
         return knownNodes.stream()
                 .filter(node -> node.departure() == departure && node.walkable())
@@ -73,6 +106,8 @@ public class StaticWalkingMatrixClient implements WalkingMatrixClient {
     }
 
     private KnownNode matchKnownNode(MatrixNode requestedNode) {
+        KnownNode linked = linkedTourNode(requestedNode);
+        if (linked != null) return linked;
         boolean departure = START_NODE_KEY.equals(requestedNode.key());
         return knownNodes.stream()
                 .filter(node -> node.departure() == departure)

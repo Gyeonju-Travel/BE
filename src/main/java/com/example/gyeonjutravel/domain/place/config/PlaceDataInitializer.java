@@ -3,7 +3,6 @@ package com.example.gyeonjutravel.domain.place.config;
 import com.example.gyeonjutravel.domain.place.entity.Place;
 import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
-import com.example.gyeonjutravel.domain.place.service.MapOnlyPlaces;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,31 +33,18 @@ public class PlaceDataInitializer implements ApplicationRunner {
         ClassPathResource resource = new ClassPathResource("data/places.json");
         PlaceSeedDocument document = objectMapper.readValue(resource.getInputStream(), PlaceSeedDocument.class);
 
-        long existingPlaceCount = placeRepository.count();
-        if (existingPlaceCount > 0) {
-            addMissingMapOnlyPlaces(document);
-            log.info("기본 장소 초기 데이터 적재를 건너뜁니다. 기존 장소 수={}", existingPlaceCount);
-            return;
-        }
-
-        List<Place> places = document.places().stream().map(PlaceSeed::toEntity).toList();
-        placeRepository.saveAll(places);
-        log.info("지도 장소 초기 데이터 {}건을 적재했습니다. 지도 제외 데이터={}", places.size(), document.skipped().size());
-    }
-
-    private void addMissingMapOnlyPlaces(PlaceSeedDocument document) {
-        Set<String> existingNames = placeRepository.findAll().stream()
-                .map(Place::getName)
+        Set<String> existingSourceKeys = placeRepository.findAll().stream()
+                .map(Place::getSourceKey)
                 .collect(Collectors.toSet());
+        // 기존 장소의 ID와 연결된 일정·스탬프를 유지하고, 누락된 로컬 장소만 추가.
         List<Place> additions = document.places().stream()
-                .filter(seed -> MapOnlyPlaces.containsName(seed.name()))
-                .filter(seed -> !existingNames.contains(seed.name()))
-                .map(seed -> seed.toEntity("MAP_ONLY:" + seed.sourceKey()))
+                .filter(seed -> !existingSourceKeys.contains(seed.sourceKey()))
+                .map(PlaceSeed::toEntity)
                 .toList();
         if (!additions.isEmpty()) {
             placeRepository.saveAll(additions);
-            log.info("기존 DB에 지도 전용 장소 {}건을 추가했습니다.", additions.size());
         }
+        log.info("로컬 장소 초기 데이터 {}건을 추가했습니다.", additions.size());
     }
 
     private record PlaceSeedDocument(List<PlaceSeed> places, List<SkippedPlace> skipped) {

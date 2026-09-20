@@ -11,16 +11,10 @@ import com.example.gyeonjutravel.domain.place.entity.PlaceCategory;
 import com.example.gyeonjutravel.domain.place.exception.PlaceErrorCode;
 import com.example.gyeonjutravel.domain.place.repository.PlaceRepository;
 import com.example.gyeonjutravel.global.apiPayload.exception.GeneralException;
-import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -32,6 +26,7 @@ import java.util.stream.Stream;
 public class PlaceService {
 
     private final PlaceRepository placeRepository;
+    private final PlaceCatalog placeCatalog;
     private final MemberRepository memberRepository;
 
     public MapPlacePageResponse search(
@@ -41,13 +36,29 @@ public class PlaceService {
             int size
     ) {
         validatePage(page, size);
-        Specification<Place> specification = createSpecification(categories, keyword);
-        Page<MapPlaceResponse> result = placeRepository.findAll(
-                        specification,
-                        PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id"))
-                )
-                .map(MapPlaceResponse::from);
-        return MapPlacePageResponse.from(result);
+        boolean includeAttractions = categories == null || categories.isEmpty()
+                || categories.contains(PlaceCategory.ATTRACTION);
+        List<Place> matches = placeCatalog.all(includeAttractions).stream()
+                .filter(ClosedPlaces::isOpen)
+                .filter(place -> categories == null || categories.isEmpty() || categories.contains(place.getCategory()))
+                .filter(place -> matchesKeyword(place, keyword))
+                .sorted(java.util.Comparator.comparing(Place::getId))
+                .toList();
+        long offset = (long) page * size;
+        List<Place> selected = matches.stream().skip(offset).limit(size).toList();
+        List<MapPlaceResponse> content = placeCatalog.resolveAll(selected).stream().map(MapPlaceResponse::from).toList();
+        return new MapPlacePageResponse(content, page, size, matches.size(),
+                (int) ((matches.size() + (long) size - 1) / size));
+    }
+
+    private boolean matchesKeyword(Place place, String keyword) {
+        if (keyword == null || keyword.isBlank()) return true;
+        List<String> fields = Stream.of(place.getName(), place.getArea(), place.getRoadAddress(),
+                        place.getLotAddress(), place.getOriginalCategory(), place.getDetailCategory())
+                .filter(java.util.Objects::nonNull).map(value -> value.toLowerCase(Locale.ROOT)).toList();
+        return keywordTokens(keyword).stream().allMatch(token ->
+                fields.stream().anyMatch(value -> value.contains(token.toLowerCase(Locale.ROOT)))
+                        || categoriesMatching(token).contains(place.getCategory()));
     }
 
     public PlaceDetailResponse getDetail(Long placeId) {
@@ -56,7 +67,7 @@ public class PlaceService {
         if (!ClosedPlaces.isOpen(place)) {
             throw new GeneralException(PlaceErrorCode.PLACE_NOT_FOUND);
         }
-        return PlaceDetailResponse.from(place);
+        return PlaceDetailResponse.from(placeCatalog.resolve(place));
     }
 
     @Transactional
@@ -66,7 +77,7 @@ public class PlaceService {
         if (!member.addBookmark(place)) {
             throw new GeneralException(PlaceErrorCode.BOOKMARK_ALREADY_EXISTS);
         }
-        return MapPlaceResponse.from(place);
+        return MapPlaceResponse.from(placeCatalog.resolve(place));
     }
 
     public List<MapPlaceResponse> getBookmarks(
@@ -78,7 +89,7 @@ public class PlaceService {
                 : placeRepository.findBookmarkedPlacesByMemberIdAndCategories(
                         authenticatedMember.getId(), categories
                 );
-        return bookmarks
+        return placeCatalog.resolveAll(bookmarks)
                 .stream()
                 .filter(ClosedPlaces::isOpen)
                 .map(MapPlaceResponse::from)
@@ -96,39 +107,6 @@ public class PlaceService {
             throw new GeneralException(PlaceErrorCode.BOOKMARK_NOT_FOUND);
         }
         memberRepository.flush();
-    }
-
-    private Specification<Place> createSpecification(
-            List<PlaceCategory> categories,
-            String keyword
-    ) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (categories != null && !categories.isEmpty()) {
-                predicates.add(root.get("category").in(categories));
-            }
-            predicates.add(criteriaBuilder.not(root.get("name").in(ClosedPlaces.NAMES)));
-            if (keyword != null && !keyword.isBlank()) {
-                keywordTokens(keyword).forEach(token -> {
-                    String pattern = "%" + token.toLowerCase(Locale.ROOT) + "%";
-                    List<Predicate> tokenPredicates = new ArrayList<>(List.of(
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("area")), pattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("roadAddress")), pattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("lotAddress")), pattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("originalCategory")), pattern),
-                            criteriaBuilder.like(criteriaBuilder.lower(root.get("detailCategory")), pattern)
-                    ));
-                    List<PlaceCategory> matchingCategories = categoriesMatching(token);
-                    if (!matchingCategories.isEmpty()) {
-                        tokenPredicates.add(root.get("category").in(matchingCategories));
-                    }
-                    predicates.add(criteriaBuilder.or(tokenPredicates.toArray(Predicate[]::new)));
-                });
-            }
-            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
-        };
     }
 
     private List<String> keywordTokens(String keyword) {

@@ -41,12 +41,15 @@ class PlaceDataInitializerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @org.springframework.test.context.bean.override.mockito.MockitoBean
+    private com.example.gyeonjutravel.global.tourapi.TourApiClient tourApiClient;
+
     @Test
     void allValidSpreadsheetRowsAreLoaded() {
-        assertThat(placeRepository.count()).isEqualTo(87);
+        assertThat(placeRepository.count()).isEqualTo(65);
         assertThat(placeRepository.countByCategory(PlaceCategory.RESTAURANT)).isEqualTo(41);
-        assertThat(placeRepository.countByCategory(PlaceCategory.CAFE)).isEqualTo(25);
-        assertThat(placeRepository.countByCategory(PlaceCategory.ATTRACTION)).isEqualTo(21);
+        assertThat(placeRepository.countByCategory(PlaceCategory.CAFE)).isEqualTo(24);
+        assertThat(placeRepository.countByCategory(PlaceCategory.ATTRACTION)).isZero();
     }
 
     @Test
@@ -55,7 +58,7 @@ class PlaceDataInitializerIntegrationTest {
         mockMvc.perform(get("/api/places").param("categories", "CAFE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.totalElements").value(25));
+                .andExpect(jsonPath("$.result.totalElements").value(24));
     }
 
     @Test
@@ -66,7 +69,7 @@ class PlaceDataInitializerIntegrationTest {
                         .param("size", "200"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.totalElements").value(15))
+                .andExpect(jsonPath("$.result.totalElements").value(14))
                 .andExpect(jsonPath("$.result.places[0].category").value("CAFE"))
                 .andExpect(jsonPath("$.result.places[0].name").value("스컹크웍스"));
     }

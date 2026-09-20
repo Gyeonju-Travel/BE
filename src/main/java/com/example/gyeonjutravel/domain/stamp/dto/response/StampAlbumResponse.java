@@ -22,9 +22,7 @@ public record StampAlbumResponse(
 ) {
     public static StampAlbumResponse from(StampAlbum album, List<PlaceVisit> visits, java.util.function.Function<String, String> imageUrl) {
         List<String> attractionStampNames = visits.stream()
-                .map(PlaceVisit::getPlace)
-                .map(StampType::fromPlace)
-                .flatMap(java.util.Optional::stream)
+                .map(PlaceVisit::getStampType)
                 .map(StampType::getDisplayName)
                 .distinct()
                 .toList();

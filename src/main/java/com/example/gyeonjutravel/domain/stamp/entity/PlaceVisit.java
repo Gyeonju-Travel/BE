@@ -51,10 +51,16 @@ public class PlaceVisit extends BaseEntity {
     @Column(name = "visited_at", nullable = false)
     private LocalDateTime visitedAt;
 
-    public PlaceVisit(Member member, Schedule schedule, Place place, LocalDateTime visitedAt) {
+    // 획득 당시의 스탬프 종류를 저장하여 API 이름 변경이나 장애와 무관하게 기록을 조회합니다.
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    @Column(name = "stamp_type", nullable = false, length = 40)
+    private StampType stampType;
+
+    public PlaceVisit(Member member, Schedule schedule, Place place, StampType stampType, LocalDateTime visitedAt) {
         this.member = member;
         this.schedule = schedule;
         this.place = place;
         this.visitedAt = visitedAt;
+        this.stampType = java.util.Objects.requireNonNull(stampType);
     }
 }

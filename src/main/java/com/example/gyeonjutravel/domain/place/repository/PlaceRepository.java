@@ -11,6 +11,14 @@ import java.util.List;
 
 public interface PlaceRepository extends JpaRepository<Place, Long>, JpaSpecificationExecutor<Place> {
 
+    List<Place> findAllByCategory(PlaceCategory category);
+
+    List<Place> findAllByCategoryAndTourContentIdIsNull(PlaceCategory category);
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Place p where p.tourContentId is not null order by p.id")
+    List<Place> lockAttractions();
+
     long countByCategory(PlaceCategory category);
 
     @Query("select place from Place place where place.name in :names order by place.id asc")
