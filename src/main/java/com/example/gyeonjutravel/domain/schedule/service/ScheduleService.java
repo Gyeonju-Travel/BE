@@ -52,6 +52,7 @@ public class ScheduleService {
 
     private final MemberRepository memberRepository;
     private final PlaceRepository placeRepository;
+    private final com.example.gyeonjutravel.domain.place.service.PlaceCatalog placeCatalog;
     private final ScheduleRepository scheduleRepository;
     private final ScheduleMatrixCache scheduleMatrixCache;
     private final NearestNeighborOptimizer nearestNeighborOptimizer;
@@ -63,6 +64,7 @@ public class ScheduleService {
     public SchedulePreviewResponse preview(Long memberId, SchedulePreviewRequest request) {
         validateUniquePlaceIds(request.placeIds());
         List<Place> places = findBookmarkedPlaces(memberId, request.placeIds());
+        placeCatalog.resolveAll(places);
         Map<Long, Place> placesById = indexPlaces(places);
 
         MatrixPreview matrixPreview = scheduleMatrixCache.createPreview(
@@ -70,11 +72,7 @@ public class ScheduleService {
                 request.date(),
                 request.departureArea(),
                 places.stream()
-                        .map(place -> new PlaceCoordinate(
-                                place.getId(),
-                                place.getLongitude(),
-                                place.getLatitude()
-                        ))
+                        .map(place -> PlaceCoordinate.from(place))
                         .toList()
         );
         List<Long> recommendedOrder = nearestNeighborOptimizer.optimize(
@@ -132,7 +130,10 @@ public class ScheduleService {
         List<ScheduleDetailResponse> schedules = scheduleRepository
                 .findAllByMemberIdAndTravelDateWithItems(memberId, date)
                 .stream()
-                .map(ScheduleDetailResponse::from)
+                .map(schedule -> {
+                    placeCatalog.resolveAll(schedule.getItems().stream().map(item -> item.getPlace()).toList());
+                    return ScheduleDetailResponse.from(schedule);
+                })
                 .toList();
         return ScheduleDateResponse.of(date, schedules);
     }
@@ -164,6 +165,7 @@ public class ScheduleService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new GeneralException(MemberErrorCode.MEMBER_NOT_FOUND));
         List<Place> places = findBookmarkedPlaces(memberId, request.orderedPlaceIds());
+        placeCatalog.resolveAll(places);
         Map<Long, Place> placesById = indexPlaces(places);
 
         Schedule schedule = new Schedule(member, preview.date(), preview.departureArea());
@@ -215,6 +217,7 @@ public class ScheduleService {
         if (places.size() != request.orderedPlaceIds().size()) {
             throw new GeneralException(ScheduleErrorCode.INVALID_PLACE_SELECTION);
         }
+        placeCatalog.resolveAll(places);
         Map<Long, Place> placesById = indexPlaces(places);
 
         Schedule schedule = new Schedule(member, preview.date(), preview.departureArea());
@@ -238,6 +241,7 @@ public class ScheduleService {
         validateOrder(preview.placeIds(), request.orderedPlaceIds());
 
         List<Place> places = findBookmarkedPlaces(memberId, request.orderedPlaceIds());
+        placeCatalog.resolveAll(places);
         Map<Long, Place> placesById = indexPlaces(places);
 
         schedule.updateDate(preview.date());
@@ -302,6 +306,7 @@ public class ScheduleService {
             Schedule schedule,
             SchedulePreviewRequest request
     ) {
+        placeCatalog.resolveAll(schedule.getItems().stream().map(item -> item.getPlace()).toList());
         List<String> nodeKeys = new ArrayList<>();
         List<WalkingRoute> routes = new ArrayList<>();
         nodeKeys.add(ScheduleMatrixCache.START_NODE_KEY);
