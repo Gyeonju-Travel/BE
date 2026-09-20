@@ -58,6 +58,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class RecommendedRouteService {
 
     private final PlaceRepository placeRepository;
+    private final com.example.gyeonjutravel.domain.place.service.PlaceCatalog placeCatalog;
     private final PetRepository petRepository;
     private final ScheduleMatrixCache scheduleMatrixCache;
     private final ScheduleService scheduleService;
@@ -95,7 +96,17 @@ public class RecommendedRouteService {
         if (job.status() != RecommendedRouteStatus.COMPLETED || job.result() == null) {
             throw new GeneralException(RecommendedRouteErrorCode.JOB_NOT_FOUND);
         }
-        return job.result().toResponse(recommendationId);
+        RecommendedRouteResult result = job.result();
+        Map<Long, Place> placesById = new HashMap<>();
+        placeCatalog.resolveAll(placeRepository.findAllById(result.placeIds()))
+                .forEach(place -> placesById.put(place.getId(), place));
+        List<RecommendedRoutePlaceResponse> places = result.places().stream().map(stop -> {
+            Place place = placesById.get(stop.placeId());
+            if (place == null) throw new GeneralException(RecommendedRouteErrorCode.INVALID_AI_RESPONSE);
+            return RecommendedRoutePlaceResponse.of(stop.visitOrder(), place,
+                    stop.walkingDurationSeconds(), stop.walkingDistanceMeters());
+        }).toList();
+        return new RecommendedRouteResultResponse(recommendationId, result.date(), result.departure(), places);
     }
 
     @Transactional
@@ -140,7 +151,8 @@ public class RecommendedRouteService {
     private RecommendedRouteResult createPreview(Long memberId, Long recommendationId, RecommendedRouteRequest request) {
         Pet representativePet = petRepository.findFirstByMemberIdAndRepresentativeTrue(memberId)
                 .orElseThrow(() -> new GeneralException(RecommendedRouteErrorCode.REPRESENTATIVE_PET_NOT_FOUND));
-        List<Place> dataset = placesNearDeparture(placeRepository.findAll(), request.departureArea());
+        List<Place> dataset = placesNearDeparture(placeCatalog.all(true), request.departureArea());
+        placeCatalog.resolveAll(dataset);
         validateDataset(dataset);
 
         jobs.put(recommendationId, RecommendedRouteJob.creating(memberId, RecommendedRouteStep.CONDITION_CHECKING));
@@ -165,11 +177,7 @@ public class RecommendedRouteService {
                 request.date(),
                 request.departureArea(),
                 recommendedPlaces.stream()
-                        .map(place -> new PlaceCoordinate(
-                                place.getId(),
-                                place.getLongitude(),
-                                place.getLatitude()
-                        ))
+                        .map(place -> PlaceCoordinate.from(place))
                         .toList()
         );
         recommendedPlaces = optimizeRouteOrder(recommendedPlaces, matrixPreview);
@@ -208,11 +216,7 @@ public class RecommendedRouteService {
         return places.stream()
                 .filter(ClosedPlaces::isOpen)
                 .filter(place -> !MapOnlyPlaces.isMapOnly(place))
-                .filter(place -> scheduleMatrixCache.isWalkable(new PlaceCoordinate(
-                        place.getId(),
-                        place.getLongitude(),
-                        place.getLatitude()
-                )))
+                .filter(place -> scheduleMatrixCache.isWalkable(PlaceCoordinate.from(place)))
                 .filter(place -> distanceMeters(
                         departureArea.getLongitude(),
                         departureArea.getLatitude(),
@@ -487,7 +491,7 @@ public class RecommendedRouteService {
             List<Place> recommendedPlaces,
             MatrixPreview matrixPreview
     ) {
-        List<RecommendedRoutePlaceResponse> places = new ArrayList<>();
+        List<RecommendedStop> places = new ArrayList<>();
         List<Long> placeIds = new ArrayList<>();
         String previousNodeKey = ScheduleMatrixCache.START_NODE_KEY;
 
@@ -496,9 +500,9 @@ public class RecommendedRouteService {
             String placeNodeKey = ScheduleMatrixCache.placeNodeKey(place.getId());
             WalkingRoute route = requireWalkableRoute(matrixPreview, previousNodeKey, placeNodeKey);
 
-            places.add(RecommendedRoutePlaceResponse.of(
+            places.add(new RecommendedStop(
                     index + 1,
-                    place,
+                    place.getId(),
                     route.durationSeconds(),
                     route.distanceMeters()
             ));
@@ -567,10 +571,11 @@ public class RecommendedRouteService {
             java.time.LocalDate date,
             DepartureResponse departure,
             List<Long> placeIds,
-            List<RecommendedRoutePlaceResponse> places
+            List<RecommendedStop> places
     ) {
-        RecommendedRouteResultResponse toResponse(Long recommendationId) {
-            return new RecommendedRouteResultResponse(recommendationId, date, departure, places);
-        }
     }
+
+    // 계산한 사용자 경로만 보관하며, 관광공사 API 응답은 저장하지 않습니다.
+    private record RecommendedStop(int visitOrder, Long placeId,
+                                   Long walkingDurationSeconds, Long walkingDistanceMeters) {}
 }
