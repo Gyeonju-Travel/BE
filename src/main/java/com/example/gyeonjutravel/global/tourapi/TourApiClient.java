@@ -97,21 +97,33 @@ public class TourApiClient {
         if (properties.getCacheTtl() == null || properties.getCacheTtl().isZero()
                 || properties.getCacheTtl().isNegative()) return null;
         CachedResponse cached = responseCache.get(key);
-        if (cached == null || cached.expiresAtNanos() <= System.nanoTime()) {
-            responseCache.remove(key, cached);
+        if (cached == null) {
+            log.info("[TourAPI][CACHE] miss key={}", key);
             return null;
         }
+        if (cached.expiresAtNanos() <= System.nanoTime()) {
+            responseCache.remove(key, cached);
+            log.info("[TourAPI][CACHE] expired key={}", key);
+            return null;
+        }
+        log.info("[TourAPI][CACHE] hit key={}", key);
         return cached;
     }
 
     private void putCached(String key, List<JsonNode> items) {
         long ttlNanos = properties.getCacheTtl().toNanos();
-        if (ttlNanos > 0) responseCache.put(key, new CachedResponse(items, null, System.nanoTime() + ttlNanos));
+        if (ttlNanos > 0) {
+            responseCache.put(key, new CachedResponse(items, null, System.nanoTime() + ttlNanos));
+            log.info("[TourAPI][CACHE] stored key={} itemCount={} ttl={}", key, items.size(), properties.getCacheTtl());
+        }
     }
 
     private void putCached(String key, JsonNode item) {
         long ttlNanos = properties.getCacheTtl().toNanos();
-        if (ttlNanos > 0) responseCache.put(key, new CachedResponse(null, item, System.nanoTime() + ttlNanos));
+        if (ttlNanos > 0) {
+            responseCache.put(key, new CachedResponse(null, item, System.nanoTime() + ttlNanos));
+            log.info("[TourAPI][CACHE] stored key={} ttl={}", key, properties.getCacheTtl());
+        }
     }
 
     private record CachedResponse(List<JsonNode> items, JsonNode item, long expiresAtNanos) {
