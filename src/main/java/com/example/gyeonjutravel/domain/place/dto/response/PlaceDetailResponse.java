@@ -19,7 +19,9 @@ public record PlaceDetailResponse(
         String phone,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         String businessHours,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         String breakTime,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         String closedDays,
         Double longitude,
         Double latitude,
@@ -40,7 +42,8 @@ public record PlaceDetailResponse(
                 place.getRoadAddress(), place.getLotAddress(), place.getPostalCode(),
                 place.getCategory() == PlaceCategory.ATTRACTION ? null : place.getPhone(),
                 place.getCategory() == PlaceCategory.ATTRACTION ? null : place.getBusinessHours(),
-                place.getBreakTime(), place.getClosedDays(), place.getLongitude(),
+                place.getCategory() == PlaceCategory.ATTRACTION ? null : place.getBreakTime(),
+                place.getCategory() == PlaceCategory.ATTRACTION ? null : place.getClosedDays(), place.getLongitude(),
                 place.getLatitude(), place.getImageUrl(), place.getPetAccessType(), place.getAllowedPets(),
                 place.getPetRequirements(), place.getPetInfo(), place.getPetFacilities(),
                 place.getPetProvidedItems(), place.getPetSafetyInfo(), place.getOverview()
